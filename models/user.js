@@ -22,6 +22,23 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['client', 'freelancer']
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationCode: {
+        type: String,
+    },
+    verificationCodeExpire: {
+        type: Date
+    },
+    verificationAttempts: {
+        type: Number,
+        default:0
+    },
+    verificationLockTime: {
+        type: Date
     }
 }, {timestamps: true})
 
