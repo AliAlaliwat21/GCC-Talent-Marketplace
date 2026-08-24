@@ -55,7 +55,8 @@ const signUp = async (req, res) => {
         const userData = {
             username: req.body.username,
             password: hashedPassword,
-            email: req.body.email
+            email: req.body.email,
+            role: req.body.role
         }
 
         const user = await User.create(userData)
@@ -64,7 +65,7 @@ const signUp = async (req, res) => {
         const payload = { username: user.username, _id: user._id }
 
         // create the token with payload + secret
-        const token = jwt.sign({payload}, process.env.JWT_SECRET)
+        const token = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
 
         res.status(201).json({ token })
     } catch(err) {
@@ -100,8 +101,8 @@ const signIn = async (req, res) => {
             return res.status(401).json({ err: 'Login failed. Please try again.' })
         }
 
-        const payload = { username: userInDatabase.username, _id: userInDatabase._id }
-        const token = jwt.sign({ payload }, process.env.JWT_SECRET)
+        const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
+        const token = jwt.sign({ payload }, process.env.JWT_SECRET, {expiresIn: '30m'})
 
         res.status(200).json({ token })
 
@@ -109,6 +110,8 @@ const signIn = async (req, res) => {
         res.status(500).json({ err: err.message })
     }
 }
+
+
 
 module.exports = {
     // signToken,

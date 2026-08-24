@@ -25,8 +25,8 @@ app.use(morgan('dev'))
 // Routes go here
 // app.get('/auth/sign-token', authCtrl.signToken)
 // app.get('/auth/verify-token', authCtrl.verifyToken)
-app.post('/auth/sign-up', authCtrl.signUp)
-app.post('/auth/sign-in', authCtrl.signIn)
+app.post('/api/v1/auth/register', authCtrl.signUp)
+app.post('/api/v1/auth/sign-in', authCtrl.signIn)
 
 app.get('/users', verifyToken, usersCtrl.index)
 
