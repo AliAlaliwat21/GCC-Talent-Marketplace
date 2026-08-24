@@ -4,7 +4,10 @@ const app = express()
 const mongoose = require('mongoose')
 const cors = require('cors')
 const morgan = require('morgan')
-
+const dns = require("node:dns");
+// DNS workaround for MongoDB Atlas.
+// Remove these two lines if your regular DNS works correctly.
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 const PORT = process.env.PORT ? process.env.PORT : "3000"
 
 const authCtrl = require('./controllers/auth')
@@ -28,7 +31,9 @@ app.use(morgan('dev'))
 app.post('/api/v1/auth/register', authCtrl.signUp)
 app.post('/api/v1/auth/sign-in', authCtrl.signIn)
 
+
 app.get('/users', verifyToken, usersCtrl.index)
+app.get('/users/me', verifyToken, usersCtrl.showUser)
 
 app.listen(PORT, () => {
   console.log(`The express app is ready on port ${PORT}! 😀`)
