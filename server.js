@@ -33,7 +33,8 @@ app.post('/api/v1/auth/sign-in', authCtrl.signIn)
 
 
 app.get('/users', verifyToken, usersCtrl.index)
-app.get('/users/me', verifyToken, usersCtrl.showUser)
+app.get('/users/me', verifyToken, usersCtrl.showMe)
+app.patch('/users/me', verifyToken, usersCtrl.updateMe)
 
 app.listen(PORT, () => {
   console.log(`The express app is ready on port ${PORT}! 😀`)

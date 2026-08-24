@@ -5,7 +5,7 @@ const index = async (req, res) => {
    res.json(users)
 }
 
-const showUser = async (req, res)=>{
+const showMe = async (req, res)=>{
     try {
         const user = await User.findById(req.user._id)
 
@@ -22,7 +22,26 @@ const showUser = async (req, res)=>{
     
 }
 
+const updateMe = async (req, res)=>{
+    try {
+        const updatedUser = User.findByIdAndUpdate(req.user._id, {name: req.body.name,
+             avatar: req.body.avatarUrl, 
+             notificationPrefs: req.body.notificationPrefs}, {new: true})
+
+        if (!updatedUser){
+            return res.status(400).json({message: 'User not found'})
+        }
+
+        res.status(200).json(updatedUser)
+    } catch (error) {
+         res.status(500).json({
+            message: error.message
+            })
+    }
+}
+
 module.exports = {
     index,
-    showUser
+    showMe,
+    updateMe
 }
