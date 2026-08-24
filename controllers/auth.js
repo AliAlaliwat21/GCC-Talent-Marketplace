@@ -62,10 +62,10 @@ const signUp = async (req, res) => {
         const user = await User.create(userData)
 
         // create the payload
-        const payload = { username: user.username, _id: user._id }
+        const payload = { username: user.username, _id: user._id, email: req.body.email, role: req.body.role }
 
         // create the token with payload + secret
-        const token = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const token = jwt.sign({payload}, process.env.JWT_SECRET)
 
         res.status(201).json({ token })
     } catch(err) {
@@ -102,7 +102,7 @@ const signIn = async (req, res) => {
         }
 
         const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
-        const token = jwt.sign({ payload }, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const token = jwt.sign({ payload }, process.env.JWT_SECRET, )
 
         res.status(200).json({ token })
 
@@ -119,3 +119,6 @@ module.exports = {
     signUp,
     signIn,
 }
+
+// to add later in token const 
+// {expiresIn: '30m'}
