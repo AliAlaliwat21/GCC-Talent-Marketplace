@@ -39,7 +39,21 @@ const userSchema = new mongoose.Schema({
     },
     verificationLockTime: {
         type: Date
-    }
+    },
+    avatarUrl: {
+    type: String,
+    default: ''
+    },
+    notificationPrefs: {
+    email: {
+        type: Boolean,
+        default: true
+         },
+    inApp: {
+        type: Boolean,
+        default: true
+        }
+    },
 }, {timestamps: true})
 
 userSchema.set('toJSON', {
