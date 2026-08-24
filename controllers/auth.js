@@ -43,6 +43,12 @@ const signUp = async (req, res) => {
             })
         }
 
+        if (req.body.password.length < 8 ){
+            return res.status(400).json({
+                err: 'Password must be at least 8 characters.'
+            })
+        }
+
         // creates user
         const hashedPassword = bcrypt.hashSync(req.body.password, 10)
 
