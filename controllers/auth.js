@@ -29,8 +29,24 @@ const signUp = async (req, res) => {
             username: req.body.username
         })
 
+        const existingEmail = await User.findOne({
+            email: req.body.email
+        })
+
         if (userInDatabase) {
             return res.status(409).json({ err: 'Username already taken.' })
+        }
+
+        if (existingEmail){
+            return res.status(409).json({
+                err: 'Email already in use.'
+            })
+        }
+
+        if (req.body.password.length < 8 ){
+            return res.status(400).json({
+                err: 'Password must be at least 8 characters.'
+            })
         }
 
         // creates user
@@ -39,6 +55,7 @@ const signUp = async (req, res) => {
         const userData = {
             username: req.body.username,
             password: hashedPassword,
+            email: req.body.email
         }
 
         const user = await User.create(userData)
@@ -62,8 +79,18 @@ const signIn = async (req, res) => {
             username: req.body.username
         })
 
+        const existingEmail = await User.findOne({
+            email: req.body.email
+        })
+
         if (!userInDatabase) {
             return res.status(404).json({ err: 'User does not exist.' })
+        }
+
+        if (existingEmail){
+            return res.status(409).json({
+                err: 'Email already in use.'
+            })
         }
 
         // check if the user's password is correct

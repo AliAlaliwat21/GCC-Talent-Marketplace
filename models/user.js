@@ -4,11 +4,42 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
+        trim: true,
+        unique: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
     },
     password: {
         type: String,
         required: true,
     },
+    role: {
+        type: String,
+        required: true,
+        enum: ['client', 'freelancer']
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationCode: {
+        type: String,
+    },
+    verificationCodeExpire: {
+        type: Date
+    },
+    verificationAttempts: {
+        type: Number,
+        default:0
+    },
+    verificationLockTime: {
+        type: Date
+    }
 }, {timestamps: true})
 
 userSchema.set('toJSON', {
