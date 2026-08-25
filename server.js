@@ -12,6 +12,7 @@ const PORT = process.env.PORT ? process.env.PORT : "3000"
 
 const authCtrl = require('./controllers/auth')
 const usersCtrl = require('./controllers/users')
+const freelancerProfilesCtrl = require('./controllers/freelancerProfiles')
 
 const verifyToken = require('./middleware/verify-token')
 
