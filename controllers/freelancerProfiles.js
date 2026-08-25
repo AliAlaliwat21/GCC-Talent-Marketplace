@@ -125,9 +125,37 @@ const updatePortfolioItem = async (req, res) => {
     }
 }
 
+const deletePortfolioItem = async (req, res) => {
+    try {
+        const profile = await FreelancerProfile.findById(req.params.id)
+        
+        if (!profile) {
+            return res.status(404).json({message: 'Freelancer profile not found'})
+        }
 
+        if (profile.user.toString() !== req.user._id.toString()) {
+            return res.status(401).json({message: 'You cannot update this profile'})
+        }
 
+        const portfolioItem = profile.portfolio.find((item) => {
+            return item._id.toString() === req.params.portfolioId
+        })
 
+        if (!portfolioItem) {
+            return res.status(404).json({message: 'Portfolio item not found'})
+        }
+
+        profile.portfolio = profile.portfolio.filter((item) => {
+            return item._id.toString() !== req.params.portfolioId
+        })
+
+        await profile.save()
+        
+        res.status(200).json({message: 'Portfolio item deleted successfully'})
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
 
 module.exports = {
     index,
@@ -135,5 +163,6 @@ module.exports = {
     create,
     update,
     createPortfolioItem,
-    updatePortfolioItem
+    updatePortfolioItem,
+    deletePortfolioItem
 }
