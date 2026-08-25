@@ -33,6 +33,7 @@ app.use(cookieParser())
 // app.get('/auth/verify-token', authCtrl.verifyToken)
 app.post('/api/v1/auth/register', authCtrl.signUp)
 app.post('/api/v1/auth/sign-in', authCtrl.signIn)
+app.post('/api/v1/auth/refresh', authCtrl.refresh)
 
 
 app.get('/api/v1/users', verifyToken, usersCtrl.index)

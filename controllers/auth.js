@@ -58,7 +58,7 @@ const signUp = async (req, res) => {
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            sameSite: lax,
+            sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 1000,
             // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here
         })
@@ -100,7 +100,7 @@ const signIn = async (req, res) => {
 
             res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            sameSite: lax,
+            sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 1000
             // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here 
         })
@@ -126,11 +126,11 @@ const refresh = async (req, res)=>{
             message: 'User not found.'
         })
 
-        const validRefreshToken = bcrypt.compareSync(refreshToken, user.refreshTokenHash)
-
         if (!user.refreshTokenHash) return res.status(401).json({
-        message: 'Invalid refresh token.'
+            message: 'Invalid refresh token.'
         })
+
+        const validRefreshToken = bcrypt.compareSync(refreshToken, user.refreshTokenHash)
 
         if (!validRefreshToken) return res.status(401).json({
             message: 'Invalid Refresh Token.'
