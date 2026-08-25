@@ -19,7 +19,28 @@ const show = async (req, res) => {
     }
 }
 
+const create = async (req, res) => {
+    try {
+        const profile = await FreelancerProfile.create({
+            user: req.user._id,
+            headline: req.body.headline,
+            bio: req.body.bio,
+            skills: req.body.skills,
+            hourlyRate: req.body.hourlyRate,
+            languages: req.body.languages,
+            availability: req.body.availability
+        })
+
+        res.status(201).json(profile)
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
+}
+
 module.exports = {
     index,
-    show
+    show,
+    create
 }
