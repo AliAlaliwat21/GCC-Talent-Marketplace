@@ -8,6 +8,7 @@ const dns = require("node:dns");
 // DNS workaround for MongoDB Atlas.
 // Remove these two lines if your regular DNS works correctly.
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
+const cookieParser = require('cookie-parser')
 const PORT = process.env.PORT ? process.env.PORT : "3000"
 
 const authCtrl = require('./controllers/auth')
@@ -25,6 +26,7 @@ mongoose.connection.on('connected', () => {
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
+app.use(cookieParser())
 
 // Routes go here
 // app.get('/auth/sign-token', authCtrl.signToken)

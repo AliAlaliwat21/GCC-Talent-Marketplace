@@ -3,24 +3,6 @@ const bcrypt = require('bcrypt')
 
 const User = require('../models/user')
 
-// const signToken = (req, res) => {
-
-//     const user = {
-//         id: 1,
-//         username: 'test',
-//         password: 'test',
-//     }
-
-//     // create a token
-//     const token = jwt.sign({ user }, process.env.JWT_SECRET)
-//     res.json({ token })
-// }
-
-// const verifyToken = (req, res) => {
-//     const token = req.headers.authorization.split(' ')[1]
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-//     res.json({ decoded })
-// }
 
 const signUp = async (req, res) => {
     try {
@@ -74,6 +56,13 @@ const signUp = async (req, res) => {
         user.refreshTokenHash = refreshTokenHash
         await user.save()
 
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            sameSite: lax,
+            maxAge: 7 * 24 * 60 * 1000,
+            // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here
+        })
+
         res.status(201).json({ accessToken })
     } catch(err) {
         res.status(400).json({ err: err.message })
@@ -107,6 +96,13 @@ const signIn = async (req, res) => {
 
         userInDatabase.refreshTokenHash = refreshTokenHash
         await userInDatabase.save()
+
+            res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            sameSite: lax,
+            maxAge: 7 * 24 * 60 * 1000
+            // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here 
+        })
 
         res.status(200).json({ accessToken })
 
