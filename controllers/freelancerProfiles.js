@@ -66,6 +66,35 @@ const update = async (req, res) => {
     }
 }
 
+const createPortfolioItem = async (req, res) => {
+    try {
+        const profile = await FreelancerProfile.findById(req.params.id)
+        
+        if (!profile) {
+            return res.status(404).json({message: 'Freelancer profile not found'})
+        }
+
+        if (profile.user.toString() !== req.user._id.toString()) {
+            return res.status(401).json({message: 'You cannot update this profile'})
+        }
+
+        profile.portfolio.push({
+            title: req.body.title,
+            description: req.body.description,
+            imageUrl: req.body.imageUrl,
+            link: req.body.link
+        })
+
+        await profile.save()
+        
+        res.status(201).json(profile)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
+
+
 
 module.exports = {
     index,
