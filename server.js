@@ -12,6 +12,7 @@ const PORT = process.env.PORT ? process.env.PORT : "3000"
 
 const authCtrl = require('./controllers/auth')
 const usersCtrl = require('./controllers/users')
+const freelancerProfilesCtrl = require('./controllers/freelancerProfiles')
 
 const verifyToken = require('./middleware/verify-token')
 
@@ -36,6 +37,13 @@ app.get('/users', verifyToken, usersCtrl.index)
 app.get('/users/me', verifyToken, usersCtrl.showMe)
 app.patch('/users/me', verifyToken, usersCtrl.updateMe)
 app.patch('/users/me/password', verifyToken, usersCtrl.changePassword)
+app.get('/freelancers', freelancerProfilesCtrl.index)
+app.get('/freelancers/:id', freelancerProfilesCtrl.show)
+app.post('/freelancers', verifyToken, freelancerProfilesCtrl.create)
+app.patch('/freelancers/:id', verifyToken, freelancerProfilesCtrl.update)
+app.post('/freelancers/:id/portfolio', verifyToken, freelancerProfilesCtrl.createPortfolioItem)
+app.patch('/freelancers/:id/portfolio/:portfolioId', verifyToken, freelancerProfilesCtrl.updatePortfolioItem)
+app.delete('/freelancers/:id/portfolio/:portfolioId', verifyToken, freelancerProfilesCtrl.deletePortfolioItem)
 
 app.listen(PORT, () => {
   console.log(`The express app is ready on port ${PORT}! 😀`)
