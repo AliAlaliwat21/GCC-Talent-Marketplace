@@ -41,6 +41,7 @@ const updateMe = async (req, res)=>{
     }
 }
 
+
 const changePassword = async(req,res)=>{
     try{
         const currentPassword = req.body.currentPassword

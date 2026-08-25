@@ -65,7 +65,7 @@ const signUp = async (req, res) => {
         const payload = { username: user.username, _id: user._id }
 
         // create the token with payload + secret
-        const token = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const token = jwt.sign({payload}, process.env.JWT_SECRET)
 
         res.status(201).json({ token })
     } catch(err) {
@@ -80,18 +80,8 @@ const signIn = async (req, res) => {
             username: req.body.username
         })
 
-        const existingEmail = await User.findOne({
-            email: req.body.email
-        })
-
         if (!userInDatabase) {
             return res.status(404).json({ err: 'User does not exist.' })
-        }
-
-        if (existingEmail){
-            return res.status(409).json({
-                err: 'Email already in use.'
-            })
         }
 
         // check if the user's password is correct
@@ -102,7 +92,7 @@ const signIn = async (req, res) => {
         }
 
         const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
-        const token = jwt.sign({ payload }, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const token = jwt.sign({ payload }, process.env.JWT_SECRET)
 
         res.status(200).json({ token })
 
@@ -119,3 +109,7 @@ module.exports = {
     signUp,
     signIn,
 }
+
+
+
+// {expiresIn: '30m'}
