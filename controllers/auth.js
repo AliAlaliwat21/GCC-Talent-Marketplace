@@ -62,12 +62,19 @@ const signUp = async (req, res) => {
         const user = await User.create(userData)
 
         // create the payload
-        const payload = { username: user.username, _id: user._id }
+        const payload = { username: user.username, _id: user._id, email: user.email, role: user.role }
 
         // create the token with payload + secret
-        const token = jwt.sign({payload}, process.env.JWT_SECRET)
+        const accessToken = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
 
-        res.status(201).json({ token })
+        const refreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+
+        const refreshTokenHash = bcrypt.hashSync(refreshToken, 10)
+
+        user.refreshTokenHash = refreshTokenHash
+        await user.save()
+
+        res.status(201).json({ accessToken })
     } catch(err) {
         res.status(400).json({ err: err.message })
     }
@@ -77,7 +84,7 @@ const signIn = async (req, res) => {
     try {
         // check if user in database already
         const userInDatabase = await User.findOne({
-            username: req.body.username
+            email: req.body.email
         })
 
         if (!userInDatabase) {
@@ -92,9 +99,16 @@ const signIn = async (req, res) => {
         }
 
         const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
-        const token = jwt.sign({ payload }, process.env.JWT_SECRET)
+        const accessToken = jwt.sign({ payload }, process.env.JWT_SECRET, {expiresIn: '30m'})
 
-        res.status(200).json({ token })
+        const refreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+
+        const refreshTokenHash = bcrypt.hashSync(refreshToken, 10)
+
+        userInDatabase.refreshTokenHash = refreshTokenHash
+        await userInDatabase.save()
+
+        res.status(200).json({ accessToken })
 
     } catch (err) {
         res.status(500).json({ err: err.message })
@@ -112,4 +126,3 @@ module.exports = {
 
 
 
-// {expiresIn: '30m'}

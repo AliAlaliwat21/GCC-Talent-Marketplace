@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema({
         default: true
         }
     },
+    refreshTokenHash: {
+        type: String,
+        default: null
+    }
 }, {timestamps: true})
 
 userSchema.set('toJSON', {

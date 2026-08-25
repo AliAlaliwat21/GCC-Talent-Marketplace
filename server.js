@@ -32,10 +32,10 @@ app.post('/api/v1/auth/register', authCtrl.signUp)
 app.post('/api/v1/auth/sign-in', authCtrl.signIn)
 
 
-app.get('/users', verifyToken, usersCtrl.index)
-app.get('/users/me', verifyToken, usersCtrl.showMe)
-app.patch('/users/me', verifyToken, usersCtrl.updateMe)
-app.patch('/users/me/password', verifyToken, usersCtrl.changePassword)
+app.get('/api/v1/users', verifyToken, usersCtrl.index)
+app.get('/api/v1/users/me', verifyToken, usersCtrl.showMe)
+app.patch('/api/v1/users/me', verifyToken, usersCtrl.updateMe)
+app.patch('/api/v1/users/me/password', verifyToken, usersCtrl.changePassword)
 
 app.listen(PORT, () => {
   console.log(`The express app is ready on port ${PORT}! 😀`)
