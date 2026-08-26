@@ -196,6 +196,60 @@ const fundMilestone = async (req, res) => {
         await session.endSession()
     }
 }
+const deliverMilestone = async (req, res) => {
+    try {
+        const contract = await Contract.findById(req.params.id)
+        
+        if (!contract) {
+            return res.status(404).json({message: "Contract not found"})
+        }
+        if (contract.freelancer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({message: "You cannot deliver this milestone"})
+        }
+        if (contract.status !== "active") {
+            return res.status(400).json({message: "This contract is not active"})
+        }
+
+        const milestone = contract.milestones.id(req.params.mid)
+
+        if (!milestone) {
+            return res.status(404).json({message: "Milestone not found"})
+        }
+
+        if (milestone.status !== "funded" && milestone.status !== "in_progress") {
+            return res.status(400).json({message: "This milestone cannot be delivered"})
+        }
+
+        let attachments
+
+        if (req.body.attachments) {
+            attachments = req.body.attachments
+        } else {
+            attachments = []
+        }
+
+        milestone.deliveries.push({
+            message: req.body.message,
+            attachments: attachments,
+            submittedAt: new Date()
+        })
+            
+        milestone.status = "delivered"
+        milestone.deliveredAt = new Date()
+
+        contract.activity.push({
+            type: "milestone_delivered",
+            by: req.user._id,
+            message: `Milestone delivered: ${milestone.title}`
+        })
+
+        await contract.save()
+        
+        res.status(200).json(contract)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
 
 module.exports = {
     index,
@@ -203,4 +257,5 @@ module.exports = {
     addMilestone,
     updateMilestone,
     fundMilestone,
+    deliverMilestone,
 }
