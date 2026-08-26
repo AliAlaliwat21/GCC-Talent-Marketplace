@@ -1,8 +1,16 @@
 const ClientProfile = require('../models/clientProfile')
 
 const index = async (req, res) => {
-    const profiles = await ClientProfile.find()
-    res.json(profiles)
+    try {
+        const profiles = await ClientProfile.find()
+
+        res.status(200).json(profiles)
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
 }
 
 const show = async (req, res)=>{
@@ -73,10 +81,39 @@ const update = async(req,res)=>{
         res.status(500).json({message: err.message})
     }
 }
+
+const deleteProfile = async(req,res)=>{
+    try {
+        const profile = await ClientProfile.findById(req.params.id)
+
+        if(!profile){
+            return res.status(404).json({
+                message:'Client not Found'
+            })
+        }
+        if(profile.user.toString() !== req.user._id.toString()) {
+            return res.status(401).json({
+                message:'You are not authorized to do that'
+            })
+        }
+        await ClientProfile.findByIdAndDelete(req.params.id) 
+
+        res.status(200).json({
+            message:"Profile has been deleted"
+        })
+        } catch (err) {
+            res.status(500).json({
+                message:err.message
+            })
+        
+    }
+}
 module.exports = {
     index,
     show,
     create,
-    update
-    
+    update,
+    deleteProfile
+
+
 }
