@@ -60,3 +60,16 @@ const create = async(req,res)=>{
     }
 }
 
+ const freelancerProposals = async(req,res)=>{
+    try {
+        const proposals = await Proposal.find({
+            freelancer:req.user._id
+        }).populate('job')
+
+        res.status(200).json(proposals)
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+ }
