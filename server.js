@@ -72,6 +72,8 @@ app.get('/api/v1/clients/:userId', verifyToken, clientProfileCtrl.show)
 
 // Jobs routes
 app.post('/api/v1/jobs', verifyToken, jobsCtrl.create)
+app.get('/api/v1/jobs/:jobId', jobsCtrl.showJob)
+app.get('/api/v1/jobs', jobsCtrl.allJobs)
 
 
 //server

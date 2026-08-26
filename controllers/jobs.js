@@ -27,6 +27,34 @@ const create = async (req, res)=>{
     }
 }
 
+const showJob = async (req, res)=>{
+    try {
+        const singleJob = await Job.findById(req.params.jobId).populate('client').populate('category').populate('skills')
+
+        if (!singleJob) return res.status(404).json({
+            message: 'Job not found!'
+        })
+
+        res.status(200).json(singleJob)
+        
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
+const allJobs = async (req, res) =>{
+    try {
+        const jobs = await Job.find().populate('client').populate('category').populate('skills')
+
+        res.status(200).json(jobs)
+
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     create,
+    showJob,
+    allJobs
 }
