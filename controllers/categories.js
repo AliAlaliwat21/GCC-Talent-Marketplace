@@ -56,8 +56,26 @@ const update = async (req, res) => {
     }
 }
 
+const deleteCategory = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({message: "Only admins can delete categories"})
+        }
+        
+        const deletedCategory = await Category.findByIdAndDelete(req.params.id)
+        if (!deletedCategory) {
+            return res.status(404).json({message: "Category not found"})
+        }
+
+        res.status(200).json({message: "Category deleted successfully"})
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     create,
     update,
+    deleteCategory
 }
