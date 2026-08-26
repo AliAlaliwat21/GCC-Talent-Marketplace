@@ -58,8 +58,26 @@ const update = async (req, res) => {
     }
 }
 
+const deleteSkill = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({message: "Only admins can delete skills"})
+        }
+        const deletedSkill = await Skill.findByIdAndDelete(req.params.id)
+
+        if (!deletedSkill) {
+            return res.status(404).json({message: "Skill not found"})
+        }
+
+        res.status(200).json({message: "Skill deleted successfully"})
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     create,
     update,
+    deleteSkill
 }
