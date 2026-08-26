@@ -15,6 +15,7 @@ const authCtrl = require('./controllers/auth')
 const usersCtrl = require('./controllers/users')
 const freelancerProfilesCtrl = require('./controllers/freelancerProfiles')
 const clientProfileCtrl = require('./controllers/clientProfile')
+const jobsCtrl = require('./controllers/jobs')
 
 const verifyToken = require('./middleware/verify-token')
 
@@ -68,6 +69,9 @@ app.post('/api/v1/clients/me', verifyToken, clientProfileCtrl.create)
 app.patch('/api/v1/clients/me', verifyToken, clientProfileCtrl.update)
 app.delete('/api/v1/clients/me', verifyToken, clientProfileCtrl.deleteProfile)
 app.get('/api/v1/clients/:userId', verifyToken, clientProfileCtrl.show)
+
+// Jobs routes
+app.post('/api/v1/jobs', verifyToken, jobsCtrl.create)
 
 
 //server
