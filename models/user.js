@@ -57,7 +57,24 @@ const userSchema = new mongoose.Schema({
     refreshTokenHash: {
         type: String,
         default: null
-    }
+    },
+    country: {
+    type: String,
+    enum: [
+        'Bahrain',
+        'Kuwait',
+        'Oman',
+        'Qatar',
+        'Saudi Arabia',
+        'United Arab Emirates'
+    ],
+},
+
+    city: {
+        type: String,
+        trim: true,
+    },
+
 }, {timestamps: true})
 
 userSchema.set('toJSON', {
