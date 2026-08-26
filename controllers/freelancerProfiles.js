@@ -45,7 +45,7 @@ const update = async (req, res) => {
             return res.status(404).json({message: 'Freelancer profile not found'})
         }
         
-        if (profile.user.toString() !== req.user._id.toString()) { return res.status(401).json({ message: 'You cannot update this profile'})
+        if (profile.user.toString() !== req.user._id.toString()) { return res.status(401).json({ message: 'You cannot update this profile!'})
         }
     
     const updatedProfile = await FreelancerProfile.findByIdAndUpdate(
