@@ -1,4 +1,7 @@
+const mongoose = require('mongoose')
 const Contract = require('../models/contract')
+const User = require('../models/user')
+const Transaction = require('../models/transaction')
 
 const index = async (req, res) => {
     try {
@@ -118,9 +121,86 @@ const updateMilestone = async (req, res) => {
     }
 }
 
+const fundMilestone = async (req, res) => {
+    const session = await mongoose.startSession()
+
+    try {
+        session.startTransaction()
+        
+        const contract = await Contract.findById(req.params.id).session(session)
+        if (!contract) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Contract not found"})
+        }
+        if (contract.client.toString() !== req.user._id.toString()) {
+            await session.abortTransaction()
+            return res.status(403).json({message: "You cannot fund this milestone"})
+        }
+
+        const milestone = contract.milestones.id(req.params.mid)
+
+        if (!milestone) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Milestone not found"})
+        }
+
+        if (milestone.status !== "pending") {
+            await session.abortTransaction()
+            return res.status(400).json({message: "This milestone cannot be funded"})
+        }
+
+        const client = await User.findById(req.user._id).session(session)
+
+        if (client.wallet.available < milestone.amount) {
+            await session.abortTransaction()
+            return res.status(422).json({message: "Insufficient wallet balance"})
+        }
+
+        client.wallet.available = client.wallet.available - milestone.amount
+        client.wallet.pending = client.wallet.pending + milestone.amount
+
+        milestone.status = "funded"
+        milestone.escrowAmount = milestone.amount
+        milestone.fundedAt = new Date()
+
+        contract.activity.push({
+            type: "milestone_funded",
+            by: req.user._id,
+            message: `Milestone funded: ${milestone.title}`
+        })
+
+        await Transaction.create([{
+            user: client._id,
+            type: 'escrow_fund',
+            amount: milestone.amount,
+            direction: 'debit',
+            balanceAfter: client.wallet.available,
+            contract: contract._id,
+            milestoneId: milestone._id,
+            reference: `escrow-fund-${contract._id}-${milestone._id}`,
+            status: 'completed'
+        }], {session})
+
+        await client.save({session})
+        await contract.save({session})
+        await session.commitTransaction()
+
+        res.status(200).json(contract)
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction()
+        }
+
+        res.status(500).json({message: error.message})
+    } finally {
+        await session.endSession()
+    }
+}
+
 module.exports = {
     index,
     show,
     addMilestone,
-     updateMilestone,
+    updateMilestone,
+    fundMilestone,
 }
