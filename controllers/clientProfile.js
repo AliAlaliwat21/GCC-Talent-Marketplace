@@ -19,13 +19,36 @@ const show = async (req, res)=>{
     }
 }
 
-const create = async(req,res)=>{
+const create = async (req, res) => {
     try {
-        
+        const existingProfile = await ClientProfile.findOne({
+            user: req.user._id
+        })
+
+        if (existingProfile) {
+            return res.status(400).json({
+                message: 'Client profile already exists'
+            })
+        }
+
+        const profile = await ClientProfile.create({
+            user: req.user._id,
+            isCompany: req.body.isCompany,
+            companyName: req.body.companyName,
+            description: req.body.description,
+            website: req.body.website
+        })
+
+        res.status(201).json(profile)
+
     } catch (error) {
-        
+        res.status(500).json({
+            message: error.message
+        })
     }
 }
 module.exports = {
-    index
+    index,
+    show,
+    create
 }
