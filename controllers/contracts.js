@@ -416,6 +416,92 @@ const requestRevision = async (req, res) => {
     }
 }
 
+const cancelContract = async (req, res) => {
+    const session = await mongoose.startSession()
+    
+    try {
+        session.startTransaction()
+        const contract = await Contract.findById(req.params.id).session(session)
+
+        if (!contract) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Contract not found"})
+        }
+        if (contract.client.toString() !== req.user._id.toString() && contract.freelancer.toString() !== req.user._id.toString()) {
+            await session.abortTransaction()
+            return res.status(403).json({message: "You cannot cancel this contract"})
+        }
+        if (contract.status !== "active") {
+            await session.abortTransaction()
+            return res.status(400).json({message: "This contract cannot be cancelled"})
+        }
+        
+        const client = await User.findById(contract.client).session(session)
+        const refundTransactions = []
+        
+        for (let i = 0; i < contract.milestones.length; i++) {
+            const milestone = contract.milestones[i]
+            
+            if (milestone.escrowAmount > 0 && milestone.status !== "approved") {
+                
+                const refundAmount = milestone.escrowAmount
+                
+                if (client.wallet.pending < refundAmount) {
+                    await session.abortTransaction()
+                    return res.status(422).json({message: "Invalid escrow balance"})
+                }
+                client.wallet.pending = Math.round((client.wallet.pending - refundAmount) * 100) /100
+                client.wallet.available = Math.round((client.wallet.available + refundAmount) * 100)/100
+                
+                refundTransactions.push({
+                    user: client._id,
+                    type: "escrow_refund",
+                    amount: refundAmount,
+                    direction: "credit",
+                    balanceAfter: client.wallet.available,
+                    contract: contract._id,
+                    milestoneId: milestone._id,
+                    reference: `escrow-refund-${contract._id}-${milestone._id}`,
+                    status: "completed"
+                })
+                
+                milestone.escrowAmount = 0
+                milestone.status = "refunded"
+            } else if (
+                milestone.status !== "approved" &&
+                milestone.status !== "refunded"
+            ) {
+                milestone.status = "cancelled"
+            }
+        }
+        
+        contract.status = "cancelled"
+        
+        contract.activity.push({
+            type: "contract_cancelled",
+            by: req.user._id,
+            message: "Contract cancelled"
+        })
+        
+        if (refundTransactions.length > 0) {
+            await Transaction.create(refundTransactions, {session})
+        }
+        await client.save({session})
+        await contract.save({session})
+        await session.commitTransaction()
+        
+        res.status(200).json(contract)
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction()
+        }
+        
+        res.status(500).json({message: error.message})
+    } finally {
+        await session.endSession()
+    }
+}
+
 module.exports = {
     index,
     show,
@@ -425,4 +511,5 @@ module.exports = {
     deliverMilestone,
     approveMilestone,
     requestRevision,
+    cancelContract
 }
