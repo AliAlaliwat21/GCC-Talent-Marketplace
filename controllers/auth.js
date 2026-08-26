@@ -161,6 +161,31 @@ const refresh = async (req, res)=>{
     }
 }
 
+const logout = async (req, res)=>{
+    try {
+        const refreshToken = req.cookies.refreshToken
+
+        if (!refreshToken) return res.status(401).json({message: 'Refresh Token Required.'})
+
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+        const user = await User.findById(decoded.payload._id)
+
+        if (!user) return res.status(404).json({
+            message: 'User not found.'
+        })
+
+        user.refreshTokenHash = null
+        await user.save()
+
+        res.clearCookie('refreshToken')
+
+        res.status(200).json({message: 'Logged Out Successfully.'})
+    } catch (error) {
+        res.status(500).json({ err: err.message })
+    }
+}
+
 
 
 module.exports = {
@@ -168,7 +193,8 @@ module.exports = {
     // verifyToken,
     signUp,
     signIn,
-    refresh
+    refresh,
+    logout
 }
 
 
