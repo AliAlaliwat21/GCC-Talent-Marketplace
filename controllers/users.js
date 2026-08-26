@@ -25,19 +25,23 @@ const showMe = async (req, res)=>{
 
 const updateMe = async (req, res)=>{
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.user._id, {name: req.body.name,
-             avatar: req.body.avatarUrl, 
-             notificationPrefs: req.body.notificationPrefs}, {new: true})
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, {
+            username: req.body.username,
+            avatarUrl: req.body.avatarUrl,
+            notificationPrefs: req.body.notificationPrefs,
+            country: req.body.country,
+            city: req.body.city
+        }, {new: true, runValidators: true})
 
         if (!updatedUser){
             return res.status(400).json({message: 'User not found'})
         }
-
+        
         res.status(200).json(updatedUser)
     } catch (error) {
-         res.status(500).json({
+        res.status(500).json({
             message: error.message
-            })
+        })
     }
 }
 
