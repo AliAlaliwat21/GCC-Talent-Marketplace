@@ -64,12 +64,16 @@ currency: {
 },
 
 completedContracts: {
-    type: Number
+    type: Number,
+    default: 0,
+    min: 0
 },
 
 totalEarned: {
-    type: Number
-}, 
+    type: Number,
+    default: 0,
+    min: 0
+},
 }, { timestamps: true })
 
 const FreelancerProfile = mongoose.model('FreelancerProfile', freelancerProfileSchema)
