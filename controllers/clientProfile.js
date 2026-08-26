@@ -15,7 +15,9 @@ const index = async (req, res) => {
 
 const show = async (req, res)=>{
     try{
-    const profile = await ClientProfile.findById(req.params.id)
+    const profile = await ClientProfile.findOne({
+        user: req.params.userId
+    })
 
     if(!profile) {
         return res.status(404).json({message: 'Client not found'})
@@ -24,6 +26,25 @@ const show = async (req, res)=>{
   res.status(200).json(profile)
     } catch(err) {
         res.status(500).json({message: err.message})
+    }
+}
+
+const showMe = async(req,res)=>{
+    try {
+        const profile = await ClientProfile.findOne({
+            user: req.user._id
+        })
+
+        if(!profile){
+            return res.status(404).json({
+                message: 'Client profile not found'
+            })
+        }
+        res.status(200).json(profile)
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
     }
 }
 
@@ -48,6 +69,7 @@ const create = async (req, res) => {
         })
 
         res.status(201).json(profile)
+
     } catch (error) {
         res.status(500).json({
             message: error.message
@@ -57,60 +79,65 @@ const create = async (req, res) => {
 
 const update = async(req,res)=>{
     try {
-        const profile = await ClientProfile.findById(req.params.id)
-
-        if(!profile){
-            return res.status(404).json({message: 'Client not found'})
-        }
-
-        if(profile.user.toString() !== req.user._id.toString()) {return res.status(401).json({message: 'You cannot update this profile!'}) }
-
-        const updatedProfile = await ClientProfile.findByIdAndUpdate(
-            req.params.id,
+        const updatedProfile = await ClientProfile.findOneAndUpdate(
             {
-                user: req.user._id,
+                user: req.user._id
+            },
+            {
                 isCompany: req.body.isCompany,
                 companyName: req.body.companyName,
                 description: req.body.description,
                 website: req.body.website
-            }, {new: true}
-        ) 
-         await profile.save()
-            res.status(200).json(updatedProfile)
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        )
+
+        if (!updatedProfile) {
+            return res.status(404).json({
+                message: 'Client profile not found'
+            })
+        }
+
+        res.status(200).json(updatedProfile)
+
     } catch (err) {
-        res.status(500).json({message: err.message})
+        res.status(500).json({
+            message: err.message
+        })
     }
 }
 
-const deleteProfile = async(req,res)=>{
-    try {
-        const profile = await ClientProfile.findById(req.params.id)
 
-        if(!profile){
+const deleteProfile = async(req,res)=> {
+    try {
+        const deletedProfile = await ClientProfile.findOneAndDelete({
+            user: req.user._id
+        })
+
+        if (!deletedProfile) {
             return res.status(404).json({
-                message:'Client not Found'
+                message: 'Client profile not found'
             })
         }
-        if(profile.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({
-                message:'You are not authorized to do that'
-            })
-        }
-        await ClientProfile.findByIdAndDelete(req.params.id) 
 
         res.status(200).json({
-            message:"Profile has been deleted"
+            message: 'Profile has been deleted'
         })
-        } catch (err) {
-            res.status(500).json({
-                message:err.message
-            })
-        
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
     }
 }
+
 module.exports = {
     index,
     show,
+    showMe,
     create,
     update,
     deleteProfile
