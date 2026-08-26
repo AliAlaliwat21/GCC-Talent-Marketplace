@@ -28,8 +28,13 @@ const clientProfileSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    
+
     jobsPosted: {
+        type: Number,
+        default: 0,
+    },
+
+    completedContracts: {
         type: Number,
         default: 0,
     },
@@ -37,6 +42,18 @@ const clientProfileSchema = new mongoose.Schema({
     totalSpent: {
         type: Number,
         default: 0,
+    },
+
+    hireRate: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100,
+    },
+
+    currency: {
+        type: String,
+        default: 'USD',
     },
 
 }, { timestamps: true })
