@@ -14,7 +14,7 @@ const transactionSchema = new mongoose.Schema({
             "escrow_refund",
             "platform_fee"
         ],
-        require: true
+        required: true
     },
     amount: {
         type: Number,
@@ -48,4 +48,8 @@ const transactionSchema = new mongoose.Schema({
         enum: ["completed", "failed"],
         default: "completed"
     }
-})
+}, {timestamps: true})
+
+const Transaction = mongoose.model("Transaction", transactionSchema)
+
+module.exports = Transaction
