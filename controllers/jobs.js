@@ -92,6 +92,36 @@ const updateJob = async (req, res)=>{
     }
 }
 
+const closeJob = async (req, res)=>{
+    try {
+        const findJob = await Job.findById(req.params.jobId)
+
+        if (!findJob) return res.status(404).json({
+            message: 'Job not found!'
+        })
+
+        if (!findJob.client.equals(req.user._id)) return res.status(403).json({
+            message: 'You are not authorized to take such action!'
+        })
+
+        if (findJob.status !== 'open') {
+             return res.status(422).json({
+            message: 'Job cannot be closed!'
+        })
+        } else{
+            findJob.status = 'closed'
+            await findJob.save()
+        }
+
+        res.status(200).json({
+            message: 'Job has been closed.'
+        })
+
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     create,
     showJob,
