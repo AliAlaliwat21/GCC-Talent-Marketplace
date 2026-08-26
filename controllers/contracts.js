@@ -369,6 +369,53 @@ const approveMilestone = async (req, res) => {
     }
 }
 
+const requestRevision = async (req, res) => {
+    try {
+        const contract = await Contract.findById(req.params.id)
+        
+        if (!contract) {
+            return res.status(404).json({message: "Contract not found"})
+        }
+        if (contract.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({message: "You cannot request a revision"})
+        }
+        if (contract.status !== "active") {
+            return res.status(400).json({message: "This contract is not active"})
+        }
+        
+        const milestone = contract.milestones.id(req.params.mid)
+
+        if (!milestone) {
+            return res.status(404).json({message: "Milestone not found"})
+        }
+        if (milestone.status !== "delivered") {
+            return res.status(400).json({message: "A revision can only be requested after delivery"})
+        }
+        if (!req.body.note) {
+            return res.status(400).json({message: "Revision comments are required"})
+        }
+        
+        const latestDelivery = milestone.deliveries[milestone.deliveries.length - 1]
+
+        latestDelivery.response = "revision"
+        latestDelivery.responseNote = req.body.note
+        latestDelivery.respondedAt = new Date()
+        milestone.status = "in_progress"
+
+        contract.activity.push({
+            type: "milestone_revision",
+            by: req.user._id,
+            message: `Revision requested: ${milestone.title}`
+        })
+
+        await contract.save()
+        
+        res.status(200).json(contract)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     show,
@@ -377,4 +424,5 @@ module.exports = {
     fundMilestone,
     deliverMilestone,
     approveMilestone,
+    requestRevision,
 }
