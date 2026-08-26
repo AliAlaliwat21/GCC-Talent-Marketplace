@@ -12,6 +12,25 @@ const index = async (req, res) => {
     }
 }
 
+const create = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({message: "Only admins can create skills"})
+        }
+        
+        const skill = await Skill.create({
+            name: req.body.name,
+            slug: req.body.slug,
+            category: req.body.category
+        })
+        
+        res.status(201).json(skill)
+    } catch (error) {
+        res.status(400).json({message: error.message})
+    }
+}
+
 module.exports = {
-    index
+    index,
+    create,
 }
