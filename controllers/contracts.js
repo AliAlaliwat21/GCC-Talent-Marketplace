@@ -251,6 +251,124 @@ const deliverMilestone = async (req, res) => {
     }
 }
 
+const approveMilestone = async (req, res) => {
+    const session = await mongoose.startSession()
+    
+    try {
+        session.startTransaction()
+
+        const contract = await Contract.findById(req.params.id).session(session)
+
+        if (!contract) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Contract not found"})
+        }
+        if (contract.client.toString() !== req.user._id.toString()) {
+            await session.abortTransaction()
+            return res.status(403).json({message: "You cannot approve this milestone"})
+        }
+        
+        const milestone = contract.milestones.id(req.params.mid)
+        
+        if (!milestone) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Milestone not found"})
+        }
+        if (milestone.status !== "delivered") {
+            await session.abortTransaction()
+            return res.status(400).json({message: "This milestone cannot be approved"})
+        }
+
+        const client = await User.findById(contract.client).session(session)
+        const freelancer = await User.findById(contract.freelancer).session(session)
+        const escrowAmount = milestone.escrowAmount
+        const feePercentage = Number(process.env.PLATFORM_FEE_PCT) || 10
+
+        const platformFee =
+            Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+    
+        const freelancerBalanceAfterRelease = Math.round((freelancer.wallet.available + escrowAmount) * 100)/100
+        const freelancerBalanceAfterFee = Math.round((freelancerBalanceAfterRelease - platformFee) * 100)/100
+
+        if (client.wallet.pending < escrowAmount) {
+            await session.abortTransaction()
+            return res.status(422).json({message: "Invalid escrow balance"})
+        }
+
+        client.wallet.pending = Math.round((client.wallet.pending - escrowAmount) * 100)/100
+        freelancer.wallet.available = freelancerBalanceAfterFee
+
+        const latestDelivery = milestone.deliveries[milestone.deliveries.length - 1]
+
+        latestDelivery.response = "approved"
+        latestDelivery.respondedAt = new Date()
+        milestone.status = "approved"
+        milestone.escrowAmount = 0
+        milestone.approvedAt = new Date()
+        
+        contract.activity.push({
+            type: "milestone_approved",
+            by: req.user._id,
+            message: `Milestone approved: ${milestone.title}`
+        })
+
+        let allMilestonesApproved = true
+
+        for (let i = 0; i < contract.milestones.length; i++) {
+            if (contract.milestones[i].status !== "approved") {
+                allMilestonesApproved = false
+                break
+            }
+        }
+        
+        if (allMilestonesApproved) {
+            contract.status = "completed"
+            contract.completedAt = new Date()
+        }
+
+        await Transaction.create([
+            {
+                user: freelancer._id,
+                type: "escrow_release",
+                amount: escrowAmount,
+                direction: "credit",
+                balanceAfter: freelancerBalanceAfterRelease,
+                contract: contract._id,
+                milestoneId: milestone._id,
+                reference: `escrow-release-${contract._id}-${milestone._id}`,
+                status: "completed"
+            },
+            {
+                user: freelancer._id,
+                type: "platform_fee",
+                amount: platformFee,
+                direction: "debit",
+                balanceAfter: freelancerBalanceAfterFee,
+                contract: contract._id,
+                milestoneId: milestone._id,
+                reference: `platform-fee-${contract._id}-${milestone._id}`,
+                status: "completed"
+            }
+        ], {session})
+
+        await client.save({session})
+        await freelancer.save({session})
+        await contract.save({session})
+        await session.commitTransaction()
+        
+        res.status(200).json(contract)
+    } catch (error) {
+        
+        if (session.inTransaction()) {
+            await session.abortTransaction()
+        }
+        
+        res.status(500).json({message: error.message})
+    } finally {
+        await session.endSession()
+    }
+}
+
 module.exports = {
     index,
     show,
@@ -258,4 +376,5 @@ module.exports = {
     updateMilestone,
     fundMilestone,
     deliverMilestone,
+    approveMilestone,
 }
