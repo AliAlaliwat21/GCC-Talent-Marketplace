@@ -6,6 +6,10 @@ const User = require('../models/user')
 
 const signUp = async (req, res) => {
     try {
+        if (
+            req.body.role !== 'client' && req.body.role !== "freelancer") {
+                return res.status(400).json({err: "Role must be client or freelancer"})
+            }
         // check if user in database already
         const userInDatabase = await User.findOne({
             username: req.body.username
@@ -14,21 +18,14 @@ const signUp = async (req, res) => {
         const existingEmail = await User.findOne({
             email: req.body.email
         })
-
         if (userInDatabase) {
-            return res.status(409).json({ err: 'Username already taken.' })
+            return res.status(409).json({ err:"Username already taken"})
         }
-
         if (existingEmail){
-            return res.status(409).json({
-                err: 'Email already in use.'
-            })
+            return res.status(409).json({err: "Email already in use"})
         }
-
         if (req.body.password.length < 8 ){
-            return res.status(400).json({
-                err: 'Password must be at least 8 characters.'
-            })
+            return res.status(400).json({err: "Password must be at least 8 characters"})
         }
 
         // creates user
