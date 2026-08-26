@@ -47,7 +47,7 @@ const signUp = async (req, res) => {
         const accessToken = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
 
         const refreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
-
+        
         const refreshTokenHash = bcrypt.hashSync(refreshToken, 10)
 
         user.refreshTokenHash = refreshTokenHash
@@ -179,7 +179,7 @@ const logout = async (req, res)=>{
 
         res.status(200).json({message: 'Logged Out Successfully.'})
     } catch (error) {
-        res.status(500).json({ err: err.message })
+        res.status(500).json({ err: error.message })
     }
 }
 
