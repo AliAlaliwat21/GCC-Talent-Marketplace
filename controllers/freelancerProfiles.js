@@ -10,7 +10,7 @@ const show = async (req, res) => {
         const profile = await FreelancerProfile.findById(req.params.id)
         
         if (!profile) {
-            return res.status(404).json({ message: 'Freelancer profile not found'})
+            return res.status(404).json({ message: 'Freelancer not found'})
         }
         
         res.status(200).json(profile)
