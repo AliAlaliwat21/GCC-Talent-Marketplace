@@ -54,11 +54,16 @@ const userSchema = new mongoose.Schema({
         default: true
         }
     },
+    refreshTokenHash: {
+        type: String,
+        default: null
+    }
 }, {timestamps: true})
 
 userSchema.set('toJSON', {
     transform: (document, returnedObject) => {
         delete returnedObject.password
+        delete returnedObject.refreshTokenHash
     }
 })
 

@@ -25,7 +25,7 @@ const showMe = async (req, res)=>{
 
 const updateMe = async (req, res)=>{
     try {
-        const updatedUser = User.findByIdAndUpdate(req.user._id, {name: req.body.name,
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, {name: req.body.name,
              avatar: req.body.avatarUrl, 
              notificationPrefs: req.body.notificationPrefs}, {new: true})
 
