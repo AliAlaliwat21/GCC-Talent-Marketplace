@@ -17,6 +17,25 @@ const index = async (req, res) => {
     }
 }
 
+const show = async (req, res) => {
+    try {
+        const contract = await Contract.findById(req.params.id)
+        
+        if (!contract) {
+            return res.status(404).json({message: 'Contract not found'})
+        }
+        if (contract.client.toString() !== req.user._id.toString() && contract.freelancer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot view this contract'
+            })
+        }
+        res.status(200).json(contract)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
-    index
+    index,
+    show,
 }
