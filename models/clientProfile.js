@@ -29,6 +29,26 @@ const clientProfileSchema = new mongoose.Schema({
         trim: true,
     },
 
+    country: {
+        type: String,
+        trim: true,
+    },
+
+    city: {
+        type: String,
+        trim: true,
+    },
+
+    jobsPosted: {
+        type: Number,
+        default: 0,
+    },
+
+    totalSpent: {
+        type: Number,
+        default: 0,
+    },
+
 }, { timestamps: true })
 
 
