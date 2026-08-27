@@ -72,3 +72,32 @@ const create = async(req,res)=>{
         })
     }
 }
+
+const updateReview = async(req,res)=>{
+    try {
+      const review = await Review.findbyId(req.params.id) 
+      
+      if(!review){
+        return res.status(404).json({
+            message: 'Review not found'
+        })
+      }
+      if (review.reviwer.toString() !== req.user._id.toString()){
+        return res.status(403).json({
+            message: 'You cannot update this review'
+        })
+      }
+
+      review.rating = req.body.rating
+      review.comment = req.body.comment
+
+      await review.save()
+
+      res.status(200).json(review)
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
+        
+    }
+}
