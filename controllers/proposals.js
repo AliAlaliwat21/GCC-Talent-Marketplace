@@ -187,3 +187,50 @@ const shortlist = async(req,res)=>{
         
     }
 }
+
+const decline = async (req, res) => {
+    try {
+
+        const proposal = await Proposal.findById(req.params.id)
+
+        if (!proposal) {
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        const job = await Job.findById(proposal.job)
+
+        if (!job) {
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot manage proposals for this job'
+            })
+        }
+
+        if (
+            proposal.status !== 'pending' &&
+            proposal.status !== 'shortlisted'
+        ) {
+            return res.status(400).json({
+                message: 'This proposal cannot be declined'
+            })
+        }
+
+        proposal.status = 'declined'
+
+        await proposal.save()
+
+        res.status(200).json(proposal)
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
