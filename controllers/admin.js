@@ -154,9 +154,34 @@ const stats = async (req, res) => {
     }
 }
 
+const verifyUser = async (req, res) => {
+    try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({message: "Only admins can verify users"})
+        }
+        const verifiedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                isVerified: true
+            },
+            {
+                new: true,
+                runValidators: true
+            })
+            if (!verifiedUser) {
+                return res.status(404).json({message: "User not found"})
+            }
+            
+            res.status(200).json({message: "User verified successfully", user: verifiedUser})
+        } catch (error) {
+            res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     show,
     updateStatus,
     stats,
+    verifyUser,
 }
