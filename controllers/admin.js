@@ -178,10 +178,27 @@ const verifyUser = async (req, res) => {
     }
 }
 
+const deleteUser = async (req, res) => {
+    try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({message: "Only admins can delete users"})
+        }
+        const deletedUser = await User.findByIdAndDelete(req.params.id)
+        
+        if (!deletedUser) {
+            return res.status(404).json({message: "User not found"})
+        }
+        res.status(200).json({message: "User deleted successfully"})
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     show,
     updateStatus,
     stats,
     verifyUser,
+    deleteUser
 }
