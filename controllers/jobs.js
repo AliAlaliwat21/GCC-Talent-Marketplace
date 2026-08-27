@@ -44,7 +44,77 @@ const showJob = async (req, res)=>{
 
 const allJobs = async (req, res) =>{
     try {
-        const jobs = await Job.find().populate('client').populate('category').populate('skills')
+        const jobFilter = {}
+
+        if (req.query.budgetType) jobFilter.budgetType = req.query.budgetType
+
+        if (req.query.experienceLevel) jobFilter.experienceLevel = req.query.experienceLevel
+
+        if (req.query.category) jobFilter.category = req.query.category
+
+        if (req.query.skills) {
+            const skillIds = req.query.skills.split(',')
+
+            jobFilter.skills = {
+                $in: skillIds
+            }
+        }
+
+        if (req.query.budgetMin){
+            jobFilter.budgetMax = {
+                $gte: Number(req.query.budgetMin)
+            }
+        }
+
+        if (req.query.budgetMax){
+            jobFilter.budgetMin = {
+                $lte: Number(req.query.budgetMax)
+            }
+        }
+
+        if (req.query.search){
+            jobFilter.$or = [
+                {
+                    title: {
+                        $regex: req.query.search,
+                        $options: 'i'
+                    }
+                },
+
+                {
+                    description:{
+                        $regex: req.query.search,
+                        $options: 'i'
+                    }
+                }
+            ]
+        }
+
+        if (req.query.daysAgo){
+            const pastDate = new Date()
+
+            pastDate.setDate(
+                pastDate.getDate() - Number(req.query.daysAgo)
+            )
+
+            jobFilter.createdAt = {
+                $gte: pastDate
+            }
+        }
+
+        let sortOption = {}
+
+        if (req.query.sort){
+            if (req.query.sort === 'newest'){
+                sortOption.createdAt = -1
+            }
+
+            if (req.query.sort === 'oldest'){
+                sortOption.createdAt = 1
+            }
+        }
+
+        const jobs = await Job.find(jobFilter).sort(sortOption).populate('client').populate('category').populate('skills')
 
         res.status(200).json(jobs)
 
@@ -179,6 +249,24 @@ const deleteDraft = async (req, res)=>{
     }
 }
 
+const myJobs = async (req, res)=>{
+    try {
+        if (req.user.role !== 'client'){
+            return res.status(403).json({
+                message: 'Only clients can view their own jobs!'
+            })
+        }
+
+        const jobs = await Job.find({client: req.user._id}).populate('category').populate('skills')
+
+        res.status(200).json(jobs)
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
 
 module.exports = {
     create,
@@ -187,5 +275,6 @@ module.exports = {
     updateJob,
     closeJob,
     reopenJob,
-    deleteDraft
+    deleteDraft,
+    myJobs
 }
