@@ -234,3 +234,102 @@ const decline = async (req, res) => {
         })
     }
 }
+
+const accept = async (req, res) => {
+    try {
+
+        const proposal = await Proposal.findById(req.params.id)
+
+        if (!proposal) {
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        const job = await Job.findById(proposal.job)
+
+        if (!job) {
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot accept proposals for this job'
+            })
+        }
+
+        if (
+            proposal.status !== 'pending' &&
+            proposal.status !== 'shortlisted'
+        ) {
+            return res.status(400).json({
+                message: 'This proposal cannot be accepted'
+            })
+        }
+
+        if (!req.body.milestones || req.body.milestones.length === 0) {
+            return res.status(400).json({
+                message: 'At least one milestone is required'
+            })
+        }
+
+        const contract = await Contract.create({
+
+            client: job.client,
+
+            freelancer: proposal.freelancer,
+
+            source: {
+                type: 'job',
+                job: job._id,
+                proposal: proposal._id
+            },
+
+            title: job.title,
+
+            totalAmount: proposal.amount,
+
+            milestones: req.body.milestones
+        })
+
+        proposal.status = 'accepted'
+
+        await proposal.save()
+
+        job.status = 'in_progress'
+
+        await job.save()
+
+        await Proposal.updateMany(
+            {
+                job: job._id,
+                _id: { $ne: proposal._id },
+                status: {
+                    $in: ['pending', 'shortlisted']
+                }
+            },
+            {
+                status: 'declined'
+            }
+        )
+
+        res.status(200).json(contract)
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+module.exports = {
+    create,
+    freelancerProposals,
+    update,
+    withdraw,
+    shortlist,
+    decline,
+    accept
+}
