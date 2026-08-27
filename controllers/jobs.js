@@ -108,10 +108,10 @@ const closeJob = async (req, res)=>{
              return res.status(422).json({
             message: 'Job cannot be closed!'
         })
-        } else{
-            findJob.status = 'closed'
+        } 
+            
+        findJob.status = 'closed'
             await findJob.save()
-        }
 
         res.status(200).json({
             message: 'Job has been closed.'
@@ -122,9 +122,70 @@ const closeJob = async (req, res)=>{
     }
 }
 
+const reopenJob = async (req, res)=>{
+    try {
+        const findJob = await Job.findById(req.params.jobId)
+
+        if (!findJob) return res.status(404).json({
+            message: 'Job not found!'
+        })
+
+        if (!findJob.client.equals(req.user._id)) return res.status(403).json({
+            message: 'You are not authorized to take such action!'
+        })
+
+        if (findJob.status !== 'closed') {
+             return res.status(422).json({
+            message: 'Job must be closed!'
+        })
+        } 
+            
+        findJob.status = 'open'
+        await findJob.save()
+
+        res.status(200).json({
+            message: 'Job has been re-opened.'
+        })
+
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
+const deleteDraft = async (req, res)=>{
+    try {
+        const findJob = await Job.findById(req.params.jobId)
+
+        if (!findJob) return res.status(404).json({
+            message: 'Job not found!'
+        })
+
+        if (!findJob.client.equals(req.user._id)) return res.status(403).json({
+            message: 'You are not authorized to take such action!'
+        })
+
+        if (findJob.status !== 'draft' ) return res.status(422).json({
+            message: 'Job must be a draft to be deleted!'
+        })
+
+        await findJob.deleteOne()
+
+        res.status(200).json({
+            message: 'Job has been deleted successfully.'
+        })
+
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
+
 module.exports = {
     create,
     showJob,
     allJobs,
-    updateJob
+    updateJob,
+    closeJob,
+    reopenJob,
+    deleteDraft
 }

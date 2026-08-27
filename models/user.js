@@ -21,7 +21,35 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['client', 'freelancer']
+        enum: ['client', 'freelancer', 'admin']
+    },
+    status: {
+        type: String,
+        enum: ['active', 'suspended'],
+        default: 'active'
+    },
+    ratingAvg: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    ratingCount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    wallet: {
+        available: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        pending: {
+            type: Number,
+            default: 0,
+            min: 0
+        }
     },
     isVerified: {
         type: Boolean,
@@ -69,7 +97,6 @@ const userSchema = new mongoose.Schema({
         'United Arab Emirates'
     ],
 },
-
     city: {
         type: String,
         trim: true,

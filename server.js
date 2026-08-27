@@ -63,12 +63,12 @@ app.patch('/api/v1/freelancers/:id/portfolio/:portfolioId', verifyToken, freelan
 app.delete('/api/v1/freelancers/:id/portfolio/:portfolioId', verifyToken, freelancerProfilesCtrl.deletePortfolioItem)
 
 //client profile routes
-app.get('/api/v1/clients/me',clientProfileCtrl.index)
-app.get('/api/v1/clients/me', verifyToken, clientProfileCtrl.update)
+app.get('/api/v1/clients', clientProfileCtrl.index)
+app.get('/api/v1/clients/me', verifyToken, clientProfileCtrl.showMe)
 app.post('/api/v1/clients/me', verifyToken, clientProfileCtrl.create)
 app.patch('/api/v1/clients/me', verifyToken, clientProfileCtrl.update)
 app.delete('/api/v1/clients/me', verifyToken, clientProfileCtrl.deleteProfile)
-app.get('/api/v1/clients/:userId', verifyToken, clientProfileCtrl.show)
+app.get('/api/v1/clients/:userId', clientProfileCtrl.show)
 
 // Jobs routes
 app.post('/api/v1/jobs', verifyToken, jobsCtrl.create)
