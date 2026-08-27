@@ -1,160 +1,150 @@
 const mongoose = require('mongoose')
 
-
 const milestoneSchema = new mongoose.Schema({
-
-    title:{
+    title: {
         type: String,
-        required:true,
-        trim:true
-
+        required: true,
+        trim: true
     },
-    description:{
-        type:String,
-        trim:true
+    description: {
+        type: String,
+        trim: true
     },
-    amount:{
+    amount: {
         type: Number,
-        required:true,
+        required: true,
         min: 0
     },
-    dueDate:{
+    dueDate: {
         type: Date
     },
-    status:{
+    status: {
         type: String,
-        num:[
+        enum: [
             'pending',
             'funded',
             'in_progress',
             'delivered',
             'revision_requested',
             'approved',
-            'disputed',
             'refunded',
-            'split',
             'cancelled'
         ],
         default: 'pending'
     },
-    escrowAmount:{
+    escrowAmount: {
         type: Number,
-        default:0
+        default: 0
     },
-
     deliveries: [{
-        message:{
+        message: {
             type: String
         },
-        attachments:{
-            url:String,
-            name: String
+        attachments: [{
+            url: {
+                type: String
+            },
+            name: {
+                type: String
+            }
+        }],
+        submittedAt: {
+            type: Date
         },
-        SubmittedAt:{
-            type:Date
-        },
-        response:{
+        response: {
             type: String,
             enum: ['approved', 'revision']
         },
-        responseNote:{
-            type:String
+        responseNote: {
+            type: String
         },
-        respondedAt:{
-            type:Date
-        } 
+        respondedAt: {
+            type: Date
+        }
     }],
-    fundedAt:{
-        type:Date
+    fundedAt: {
+        type: Date
     },
-    deliveredAt:{
-        type:Date
+    deliveredAt: {
+        type: Date
     },
-    approvedAt:{
-        type:Date
+    approvedAt: {
+        type: Date
     }
-
 })
 
 const contractSchema = new mongoose.Schema({
-
-    client:{
+    client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
+        ref: 'User',
         required: true
     },
-    freelancer:{
+    freelancer: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+        ref: 'User',
+        required: true
     },
-
-    source:{
-
-        type:{
-            type:String,
-            enum:['job', 'gig'],
-            required:true
+    source: {
+        type: {
+            type: String,
+            enum: ['job'],
+            required: true
         },
-        job:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:'Job'
+        job: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Job',
+            required: true
         },
-        Proposal:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Proposal"
-        },
-
-        gig:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Gig"
-        },
-    },
-        totalAmount:{
-            type:Number,
-            required:true,
-            min:0
-        },
-        currency:{
-            type:String,
-            default:'USD'
-        },
-        Status:{
-            type:String,
-            enum:['active', 'completed', 'cancelled'],
-            default:'active'
-        },
-        milestones:[milestoneSchema],
-
-        activity:[{
-            type:{
-                type:String
-            },
-            by:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:'User'
-            },
-            message:{
-                type:String
-            },
-
-            at:{
-                type:Date,
-                default: Date.now
-            }
-        }],
-        startedAt:{
-            type:Date,
-            default: Date.now
-        },
-        completedAt:{
-            type:Date
+        proposal: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Proposal',
+            required: true
         }
-    },{timestamps: true })
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    totalAmount: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    currency: {
+        type: String,
+        default: 'USD'
+    },
+    status: {
+        type: String,
+        enum: ['active', 'completed', 'cancelled'],
+        default: 'active'
+    },
+    milestones: [milestoneSchema],
+    activity: [{
+        type: {
+            type: String
+        },
+        by: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        message: {
+            type: String
+        },
+        at: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    startedAt: {
+        type: Date,
+        default: Date.now
+    },
+    completedAt: {
+        type: Date
+    }
+}, {timestamps: true})
 
-    const Contract = mongoose.model('Contract', contractSchema)
-
-    module.exports = Contract
-
-
-
+const Contract = mongoose.model('Contract', contractSchema)
+module.exports = Contract
