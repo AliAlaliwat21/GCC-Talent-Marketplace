@@ -144,3 +144,46 @@ const withdraw = async(req,res)=>{
         })
     }
 }
+
+const shortlist = async(req,res)=>{
+    try {
+        const proposal = await Proposal.findbyId(req.params.id)
+
+        if(!proposal){
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+        const job = await Job.findById(proposal.job)
+
+        if(!job){
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()){
+            return res.status(403).json({
+                message: 'You cannot manage proposals for this job'
+            })       
+         }
+
+         if (proposal.status !== 'pending'){
+            return res.status(400).json({
+                message: 'Only pending proposals can be shortlisted'
+            })
+         }
+
+         proposal.status = 'shortlisted'
+
+         await proposal.save()
+
+         res.status(200).json(proposal)
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
+        
+    }
+}
