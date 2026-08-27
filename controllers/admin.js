@@ -1,5 +1,7 @@
 const User = require('../models/user')
-const { update } = require('./skills')
+const Job = require('../models/job')
+const Contract = require('../models/contract')
+const Transaction = require('../models/transaction')
 
 const index = async (req, res) => {
     try {
@@ -55,7 +57,78 @@ const updateStatus = async (req, res) => {
         res.status(500).json({message: error.message})
     }
 }
+const stats = async (req, res) => {
+    try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({message: "Only admins can view platform statistics"})
+        }
+        const users = await User.find()
+        const jobs = await Job.find({status: "open"})
+        const contracts = await Contract.find({status: "active"})
+        const releaseTransactions = await Transaction.find({type: "escrow_release", status: "completed"})
+        const feeTransactions = await Transaction.find({type: "platform_fee", status: "completed"})
+
+        let totalClients = 0
+        let totalFreelancers = 0
+        let totalAdmins = 0
+        let newSignups7Days = 0
+        let newSignups30Days = 0
+
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000)
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+        
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].role === "client") {
+                totalClients = totalClients + 1
+            }
+            if (users[i].role === "freelancer") {
+                totalFreelancers = totalFreelancers + 1
+            }
+
+            if (users[i].role === "admin") {
+                totalAdmins = totalAdmins + 1
+            }
+
+            if (users[i].createdAt.getTime() >= sevenDaysAgo) {
+                newSignups7Days = newSignups7Days + 1
+            }
+
+            if (users[i].createdAt.getTime() >= thirtyDaysAgo) {
+                newSignups30Days = newSignups30Days + 1
+            }
+        }
+        
+        let gmv = 0
+        for (let i = 0; i < releaseTransactions.length; i++) {
+            gmv = gmv + releaseTransactions[i].amount
+        }
+
+        let platformRevenue = 0
+        for (let i = 0; i < feeTransactions.length; i++) {
+            platformRevenue = platformRevenue + feeTransactions[i].amount
+        }
+        res.status(200).json({
+            users: {
+                clients: totalClients,
+                freelancers: totalFreelancers,
+                admins: totalAdmins
+            },
+            newSignups: {
+                last7Days: newSignups7Days,
+                last30Days: newSignups30Days
+            },
+            openJobs: jobs.length,
+            activeContracts: contracts.length,
+            gmv: gmv,
+            platformRevenue: platformRevenue
+        })
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 module.exports = {
     index,
     updateStatus,
+    stats
 }
