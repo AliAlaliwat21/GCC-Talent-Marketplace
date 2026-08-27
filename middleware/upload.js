@@ -19,7 +19,7 @@ const fileFilter = (req,file,cb)=>{
     cb(null,true)
 }
 
-const uploaf = multer({
+const upload = multer({
     storage,
     limits:{
         fileSize: 20 * 1024 * 1024
