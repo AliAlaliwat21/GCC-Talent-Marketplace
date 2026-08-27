@@ -30,6 +30,33 @@ const index = async (req, res) => {
     }
 }
 
+const show = async (req, res) => {
+    try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({message: "Only admins can view user details"})
+        }
+        const user = await User.findById(req.params.id)
+        
+        if (!user) {
+            return res.status(404).json({message: "User not found"})
+        }
+        const clientContracts = await Contract.find({client: user._id})
+        const freelancerContracts = await Contract.find({freelancer: user._id})
+        const transactions = await Transaction.find({user: user._id})
+        
+        res.status(200).json({
+            user: user,
+            contracts: {
+                asClient: clientContracts,
+                asFreelancer: freelancerContracts
+            },
+            transactions: transactions
+        })
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 const updateStatus = async (req, res) => {
     try {
         if (req.user.role !== "admin") {
@@ -129,6 +156,7 @@ const stats = async (req, res) => {
 
 module.exports = {
     index,
+    show,
     updateStatus,
-    stats
+    stats,
 }
