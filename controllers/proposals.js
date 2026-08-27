@@ -73,3 +73,263 @@ const create = async(req,res)=>{
         })
     }
  }
+
+const update = async (req, res) => {
+    try {
+        const proposal = await Proposal.findById(req.params.id)
+
+        if (!proposal) {
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        if (proposal.freelancer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot update this proposal'
+            })
+        }
+
+        if (proposal.status !== 'pending') {
+            return res.status(400).json({
+                message: 'Only pending proposals can be updated'
+            })
+        }
+
+        proposal.coverLetter = req.body.coverLetter
+        proposal.amount = req.body.amount
+        proposal.deliveryDays = req.body.deliveryDays
+        proposal.attachments = req.body.attachments
+
+        await proposal.save()
+
+        res.status(200).json(proposal)
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
+    }
+}
+
+const withdraw = async(req,res)=>{
+    try{
+        const proposal = await Proposal.findbyId(req.params.id)
+
+        if(!proposal){
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        if (proposal.freelancer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot withdraw this proposal'
+            })
+        }
+
+        if (proposal.status !== 'pending'){
+            return res.status(400).json({
+                message: 'Only pending proposals can be withdrawn'
+            })
+        }
+        proposal.status = 'withdrawn'
+
+        await proposal.save()
+
+        res.status(200).json(proposal)
+    } catch(err){
+        res.status(500).json({
+            message: err.message
+        })
+    }
+}
+
+const shortlist = async(req,res)=>{
+    try {
+        const proposal = await Proposal.findbyId(req.params.id)
+
+        if(!proposal){
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+        const job = await Job.findById(proposal.job)
+
+        if(!job){
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()){
+            return res.status(403).json({
+                message: 'You cannot manage proposals for this job'
+            })       
+         }
+
+         if (proposal.status !== 'pending'){
+            return res.status(400).json({
+                message: 'Only pending proposals can be shortlisted'
+            })
+         }
+
+         proposal.status = 'shortlisted'
+
+         await proposal.save()
+
+         res.status(200).json(proposal)
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
+        
+    }
+}
+
+const decline = async (req, res) => {
+    try {
+
+        const proposal = await Proposal.findById(req.params.id)
+
+        if (!proposal) {
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        const job = await Job.findById(proposal.job)
+
+        if (!job) {
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot manage proposals for this job'
+            })
+        }
+
+        if (
+            proposal.status !== 'pending' &&
+            proposal.status !== 'shortlisted'
+        ) {
+            return res.status(400).json({
+                message: 'This proposal cannot be declined'
+            })
+        }
+
+        proposal.status = 'declined'
+
+        await proposal.save()
+
+        res.status(200).json(proposal)
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+const accept = async (req, res) => {
+    try {
+
+        const proposal = await Proposal.findById(req.params.id)
+
+        if (!proposal) {
+            return res.status(404).json({
+                message: 'Proposal not found'
+            })
+        }
+
+        const job = await Job.findById(proposal.job)
+
+        if (!job) {
+            return res.status(404).json({
+                message: 'Job not found'
+            })
+        }
+
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: 'You cannot accept proposals for this job'
+            })
+        }
+
+        if (
+            proposal.status !== 'pending' &&
+            proposal.status !== 'shortlisted'
+        ) {
+            return res.status(400).json({
+                message: 'This proposal cannot be accepted'
+            })
+        }
+
+        if (!req.body.milestones || req.body.milestones.length === 0) {
+            return res.status(400).json({
+                message: 'At least one milestone is required'
+            })
+        }
+
+        const contract = await Contract.create({
+
+            client: job.client,
+
+            freelancer: proposal.freelancer,
+
+            source: {
+                type: 'job',
+                job: job._id,
+                proposal: proposal._id
+            },
+
+            title: job.title,
+
+            totalAmount: proposal.amount,
+
+            milestones: req.body.milestones
+        })
+
+        proposal.status = 'accepted'
+
+        await proposal.save()
+
+        job.status = 'in_progress'
+
+        await job.save()
+
+        await Proposal.updateMany(
+            {
+                job: job._id,
+                _id: { $ne: proposal._id },
+                status: {
+                    $in: ['pending', 'shortlisted']
+                }
+            },
+            {
+                status: 'declined'
+            }
+        )
+
+        res.status(200).json(contract)
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+module.exports = {
+    create,
+    freelancerProposals,
+    update,
+    withdraw,
+    shortlist,
+    decline,
+    accept
+}
