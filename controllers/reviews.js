@@ -101,3 +101,32 @@ const updateReview = async(req,res)=>{
         
     }
 }
+
+const deleteReview = async(req,res)=>{
+    try {
+        const review = await Review.findbyId(req.params.id)
+
+        if(!review){
+            return res.status(404).json({
+                message: 'Review not found'
+            })
+        }
+
+        await Review.findByIdAndDelete(req.params.id)
+
+        res.status(200).json({
+            message:'review deleted successfully'
+        })
+
+    } catch (err) {
+        res.status(500).json({
+            message:err.message
+        })
+    }
+}
+module.exports = {
+    index,
+    create,
+    update,
+    deleteReview
+}
