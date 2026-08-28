@@ -123,14 +123,20 @@ const update = async (req, res) => {
                 message: 'Only pending proposals can be updated'
             })
         }
-
-        proposal.coverLetter = req.body.coverLetter
-        proposal.amount = req.body.amount
-        proposal.deliveryDays = req.body.deliveryDays
-        proposal.attachments = req.body.attachments
-
+        if (req.body.coverLetter !== undefined) {
+            proposal.coverLetter = req.body.coverLetter
+        }
+        if (req.body.amount !== undefined) {
+            proposal.amount = req.body.amount
+        }
+        if (req.body.deliveryDays !== undefined) {
+            proposal.deliveryDays = req.body.deliveryDays
+        }
+        if (req.body.attachments !== undefined) {
+            proposal.attachments = req.body.attachments
+        }
+        
         await proposal.save()
-
         res.status(200).json(proposal)
 
     } catch (err) {
