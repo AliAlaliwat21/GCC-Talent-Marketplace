@@ -41,7 +41,7 @@ const create = async(req,res)=>{
                 message:'You have already submitted a proposal to this job'
             })
         }
-
+        
         const proposal = await Proposal.create({
             job: job._id,
             freelancer: req.user._id,
@@ -50,13 +50,13 @@ const create = async(req,res)=>{
             deliveryDays: req.body.deliveryDays,
             attachments: req.body.attachments
         })
-
+        
+        job.proposalsCount = job.proposalsCount + 1
+        await job.save()
+        
         res.status(201).json(proposal)
     } catch (err) {
-        res.status(500).json({
-            message: err.message
-        })
-        
+        res.status(500).json({message: err.message})
     }
 }
 
@@ -73,6 +73,34 @@ const create = async(req,res)=>{
         })
     }
  }
+
+ const jobProposals = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id)
+        
+        if (!job) {
+            return res.status(404).json({message: "Job not found"})
+        }
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({message: "You cannot view proposals for this job"})
+        }
+        const proposals = await Proposal.find({job: job._id}).populate("freelancer", "username avatarUrl ratingAvg ratingCount")
+        const proposalsWithProfiles = []
+
+        for (let i = 0; i < proposals.length; i++) {
+            const freelancerProfile = await FreelancerProfile.findOne({user: proposals[i].freelancer._id}).populate('skills', 'name')
+            
+            proposalsWithProfiles.push({
+                proposal: proposals[i],
+                freelancerProfile: freelancerProfile
+            })
+        }
+        
+        res.status(200).json(proposalsWithProfiles)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
 
 const update = async (req, res) => {
     try {
@@ -95,14 +123,20 @@ const update = async (req, res) => {
                 message: 'Only pending proposals can be updated'
             })
         }
-
-        proposal.coverLetter = req.body.coverLetter
-        proposal.amount = req.body.amount
-        proposal.deliveryDays = req.body.deliveryDays
-        proposal.attachments = req.body.attachments
-
+        if (req.body.coverLetter !== undefined) {
+            proposal.coverLetter = req.body.coverLetter
+        }
+        if (req.body.amount !== undefined) {
+            proposal.amount = req.body.amount
+        }
+        if (req.body.deliveryDays !== undefined) {
+            proposal.deliveryDays = req.body.deliveryDays
+        }
+        if (req.body.attachments !== undefined) {
+            proposal.attachments = req.body.attachments
+        }
+        
         await proposal.save()
-
         res.status(200).json(proposal)
 
     } catch (err) {
@@ -114,7 +148,7 @@ const update = async (req, res) => {
 
 const withdraw = async(req,res)=>{
     try{
-        const proposal = await Proposal.findbyId(req.params.id)
+        const proposal = await Proposal.findById(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
@@ -147,7 +181,7 @@ const withdraw = async(req,res)=>{
 
 const shortlist = async(req,res)=>{
     try {
-        const proposal = await Proposal.findbyId(req.params.id)
+        const proposal = await Proposal.findById(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
@@ -274,7 +308,21 @@ const accept = async (req, res) => {
                 message: 'At least one milestone is required'
             })
         }
-
+        
+        let milestoneTotal = 0
+        
+        for (let i = 0; i < req.body.milestones.length; i++) {
+            const milestoneAmount = Number(req.body.milestones[i].amount)
+            
+            if (isNaN(milestoneAmount) || milestoneAmount <= 0) {
+                return res.status(400).json({message: "Every milestone amount must be greater than zero"})
+            }
+            milestoneTotal = milestoneTotal + milestoneAmount
+        }
+        if (milestoneTotal !== proposal.amount) {
+            return res.status(400).json({message: "Milestone total must equal the proposal amount"})
+        }
+        
         const contract = await Contract.create({
 
             client: job.client,
@@ -327,6 +375,7 @@ const accept = async (req, res) => {
 module.exports = {
     create,
     freelancerProposals,
+    jobProposals,
     update,
     withdraw,
     shortlist,
