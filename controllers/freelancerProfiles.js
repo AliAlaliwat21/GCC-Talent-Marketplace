@@ -24,6 +24,12 @@ const create = async (req, res) => {
         if (req.user.role !== "freelancer") {
             return res.status(403).json({message: "Only freelancers can create freelancer profiles"})
         }
+        
+        const existingProfile = await FreelancerProfile.findOne({user: req.user._id})
+        
+        if (existingProfile) {
+            return res.status(409).json({message: "You already have a freelancer profile"})
+}
         const profile = await FreelancerProfile.create({
             user: req.user._id,
             headline: req.body.headline,
