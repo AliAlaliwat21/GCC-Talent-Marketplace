@@ -21,6 +21,9 @@ const show = async (req, res) => {
 
 const create = async (req, res) => {
     try {
+        if (req.user.role !== "freelancer") {
+            return res.status(403).json({message: "Only freelancers can create freelancer profiles"})
+        }
         const profile = await FreelancerProfile.create({
             user: req.user._id,
             headline: req.body.headline,
@@ -30,7 +33,6 @@ const create = async (req, res) => {
             languages: req.body.languages,
             availability: req.body.availability
         })
-
         res.status(201).json(profile)
     } catch (error) {
         res.status(400).json({message: error.message})
