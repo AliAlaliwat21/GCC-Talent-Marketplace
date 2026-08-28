@@ -1,5 +1,6 @@
 const FreelancerProfile = require('../models/freelancerProfile')
 const User = require('../models/user')
+const Review = require('../models/review')
 
 const index = async (req, res) => {
     const profiles = await FreelancerProfile.find()
@@ -9,16 +10,21 @@ const index = async (req, res) => {
 const show = async (req, res) => {
     try {
         const profile = await FreelancerProfile.findById(req.params.id)
+        
         if (!profile) {
             return res.status(404).json({message: "Freelancer profile not found"})
         }
 
         const user = await User.findById(profile.user)
         
-        if (!user) {return res.status(404).json({message: "User not found"})
+        if (!user) {
+            return res.status(404).json({message: "User not found"})
         }
-    
-        res.status(200).json({profile: profile,
+
+        const reviews = await Review.find({reviewee: user._id})
+        
+        res.status(200).json({
+            profile: profile,
             user: {
                 username: user.username,
                 avatarUrl: user.avatarUrl,
@@ -26,7 +32,8 @@ const show = async (req, res) => {
                 city: user.city,
                 ratingAvg: user.ratingAvg,
                 ratingCount: user.ratingCount
-            }
+            },
+            reviews: reviews
         })
     } catch (error) {
         res.status(500).json({message: error.message})
