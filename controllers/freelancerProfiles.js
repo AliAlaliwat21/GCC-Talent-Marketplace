@@ -90,7 +90,7 @@ const createPortfolioItem = async (req, res) => {
         }
 
         if (profile.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({message: 'You cannot update this profile'})
+            return res.status(403).json({message: 'You cannot update this profile'})
         }
 
         profile.portfolio.push({
@@ -117,7 +117,7 @@ const updatePortfolioItem = async (req, res) => {
         }
 
         if (profile.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({message: 'You cannot update this profile'})
+            return res.status(403).json({message: 'You cannot update this profile'})
         }
         
         const portfolioItem = profile.portfolio.find((item) => {
@@ -127,10 +127,18 @@ const updatePortfolioItem = async (req, res) => {
         if (!portfolioItem) {
             return res.status(404).json({message: 'Portfolio item not found'})
         }
-        portfolioItem.title = req.body.title
-        portfolioItem.description = req.body.description
-        portfolioItem.imageUrl = req.body.imageUrl
-        portfolioItem.link = req.body.link
+        if (req.body.title !== undefined) {
+            portfolioItem.title = req.body.title
+        }
+        if (req.body.description !== undefined) {
+            portfolioItem.description = req.body.description
+        }
+        if (req.body.imageUrl !== undefined) {
+            portfolioItem.imageUrl = req.body.imageUrl
+        }
+        if (req.body.link !== undefined) {
+            portfolioItem.link = req.body.link
+        }
 
         await profile.save()
         
@@ -149,7 +157,7 @@ const deletePortfolioItem = async (req, res) => {
         }
 
         if (profile.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({message: 'You cannot update this profile'})
+            return res.status(403).json({message: 'You cannot update this profile'})
         }
 
         const portfolioItem = profile.portfolio.find((item) => {
@@ -180,7 +188,7 @@ const deleteProfile = async (req, res) => {
         }
         
         if (profile.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({message: 'You cannot delete this profile'})
+            return res.status(403).json({message: 'You cannot delete this profile'})
         }
         
         await FreelancerProfile.findByIdAndDelete(req.params.id)
