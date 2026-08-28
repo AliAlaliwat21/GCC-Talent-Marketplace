@@ -1,5 +1,6 @@
 const Review = require('../models/review')
 const Contract = require('../models/contract')
+const User = require('../models/user')
 
 
 const index = async(req,res)=>{
@@ -12,7 +13,6 @@ const index = async(req,res)=>{
          res.status(500).json({ message: err.message })
     }
 }
-
 
 const create = async(req,res)=>{
     try {
@@ -53,6 +53,12 @@ const create = async(req,res)=>{
     } else{
         reviewee = contract.client
     }
+    
+    const reviewedUser = await User.findById(reviewee)
+    
+    if (!reviewedUser) {
+        return res.status(404).json({message: "Reviewed user not found"})
+}
 
     const review = await Review.create({
             contract: contract._id,
@@ -61,12 +67,21 @@ const create = async(req,res)=>{
             rating: req.body.rating,
             comment: req.body.comment
     })
+    
+    const userReviews = await Review.find({reviewee: reviewee})
+    let ratingTotal = 0
+    
+    for (let i = 0; i < userReviews.length; i++) {
+        ratingTotal = ratingTotal + userReviews[i].rating
+    }
+    reviewedUser.ratingCount = userReviews.length
+    reviewedUser.ratingAvg = ratingTotal/userReviews.length
+    
+    await reviewedUser.save()
 
     res.status(201).json(review)
-    }catch (err) {
-        res.status(500).json({
-            message:err.message
-        })
+}catch (err) {
+    res.status(500).json({message:err.message})
     }
 }
 
