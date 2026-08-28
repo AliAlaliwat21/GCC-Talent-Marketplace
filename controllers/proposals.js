@@ -41,7 +41,7 @@ const create = async(req,res)=>{
                 message:'You have already submitted a proposal to this job'
             })
         }
-
+        
         const proposal = await Proposal.create({
             job: job._id,
             freelancer: req.user._id,
@@ -50,13 +50,13 @@ const create = async(req,res)=>{
             deliveryDays: req.body.deliveryDays,
             attachments: req.body.attachments
         })
-
+        
+        job.proposalsCount = job.proposalsCount + 1
+        await job.save()
+        
         res.status(201).json(proposal)
     } catch (err) {
-        res.status(500).json({
-            message: err.message
-        })
-        
+        res.status(500).json({message: err.message})
     }
 }
 
@@ -175,7 +175,7 @@ const withdraw = async(req,res)=>{
 
 const shortlist = async(req,res)=>{
     try {
-        const proposal = await Proposal.findyId(req.params.id)
+        const proposal = await Proposal.findById(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
