@@ -1,4 +1,4 @@
-const cloudinary = require('../config/cloudinary')
+const cloudinary = require('./config/cloudinary')
 
 const upload = async(req,res)=>{
     try {
