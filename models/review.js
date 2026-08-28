@@ -29,6 +29,15 @@ const reviewSchema = new mongoose.Schema({
     }
 }, {timestamps: true})
 
-const Review = mongoose.model('Review', reviewSchema)
+reviewSchema.index(
+    {
+        contract: 1,
+        reviewer: 1
+    },
+    {
+        unique: true
+    }
+)
 
+const Review = mongoose.model('Review', reviewSchema)
 module.exports = Review

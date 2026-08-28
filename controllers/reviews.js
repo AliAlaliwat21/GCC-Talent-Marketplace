@@ -1,18 +1,39 @@
 const Review = require('../models/review')
 const Contract = require('../models/contract')
+const User = require('../models/user')
 
 
 const index = async(req,res)=>{
     try {
-        const reviews = await Review.find({
-            reviewee: req.params.id
+        let page = Number(req.query.page)
+        let limit = Number(req.query.limit)
+
+        if (!page || page < 1) {
+            page = 1
+        }
+        if (!limit || limit < 1) {
+            limit = 10
+        }
+        const allReviews = await Review.find({reviewee: req.params.id}).sort({createdAt: -1})
+
+        const startIndex = (page - 1) * limit
+        const endIndex = startIndex + limit
+        const reviews = []
+
+        for (let i = startIndex; i < endIndex && i < allReviews.length; i++) {
+            reviews.push(allReviews[i])
+        }
+
+        res.status(200).json({
+            reviews: reviews,
+            totalReviews: allReviews.length,
+            page: page,
+            limit: limit
         })
-        res.status(200).json(reviews)
     } catch (err) {
-         res.status(500).json({ message: err.message })
+        res.status(500).json({message: err.message})
     }
 }
-
 
 const create = async(req,res)=>{
     try {
@@ -32,13 +53,10 @@ const create = async(req,res)=>{
                 message: 'You cannot review this contract'
             })
         }
-
-        if(contract.status !== 'completed'){
-            return res.status(422).json({
-                message: 'You can only review a completed contract'
-            })
+        
+        if (contract.status !== "completed" && contract.status !== "cancelled") {
+            return res.status(422).json({message: "You can only review a completed or cancelled contract"})
         }
-
         const existingReview = await Review.findOne({
             contract:  contract._id,
             reviewer: req.user._id
@@ -56,6 +74,12 @@ const create = async(req,res)=>{
     } else{
         reviewee = contract.client
     }
+    
+    const reviewedUser = await User.findById(reviewee)
+    
+    if (!reviewedUser) {
+        return res.status(404).json({message: "Reviewed user not found"})
+}
 
     const review = await Review.create({
             contract: contract._id,
@@ -64,18 +88,28 @@ const create = async(req,res)=>{
             rating: req.body.rating,
             comment: req.body.comment
     })
+    
+    const userReviews = await Review.find({reviewee: reviewee})
+    let ratingTotal = 0
+    
+    for (let i = 0; i < userReviews.length; i++) {
+        ratingTotal = ratingTotal + userReviews[i].rating
+    }
+    reviewedUser.ratingCount = userReviews.length
+    reviewedUser.ratingAvg = ratingTotal/userReviews.length
+    
+    await reviewedUser.save()
 
     res.status(201).json(review)
-    }catch (err) {
-        res.status(500).json({
-            message:err.message
-        })
+}catch (err) {
+    res.status(500).json({message:err.message})
     }
 }
 
+/*
 const updateReview = async(req,res)=>{
     try {
-      const review = await Review.findbyId(req.params.id) 
+      const review = await Review.findById(req.params.id) 
       
       if(!review){
         return res.status(404).json({
@@ -124,9 +158,10 @@ const deleteReview = async(req,res)=>{
         })
     }
 }
+    */
 module.exports = {
     index,
     create,
-    updateReview,
-    deleteReview
+    // updateReview,
+    // deleteReview
 }
