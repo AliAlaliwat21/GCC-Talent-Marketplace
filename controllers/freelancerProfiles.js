@@ -63,15 +63,28 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const profile = await FreelancerProfile.findById(req.params.id)
+        
         if (!profile) {
             return res.status(404).json({message: "Freelancer profile not found"})
         }
         if (profile.user.toString() !== req.user._id.toString()) { 
-            return res.status(403).json({ message: "You cannot update this profile!"})
+            return res.status(403).json({message: "You cannot update this profile!"})
+        }
+        
+        const user = await User.findById(req.user._id)
+        
+        if (!user) {
+            return res.status(404).json({message: "User not found"})
+        }
+        if (req.body.country !== undefined) {
+            user.country = req.body.country
+        }
+        if (req.body.city !== undefined) {
+            user.city = req.body.city
         }
         if (req.body.headline !== undefined) {
             profile.headline = req.body.headline
-    }
+        }
         if (req.body.bio !== undefined) {
             profile.bio = req.body.bio
         }
@@ -87,10 +100,10 @@ const update = async (req, res) => {
         if (req.body.availability !== undefined) {
             profile.availability = req.body.availability
         }
-        
+        await user.save()
         await profile.save()
+
         res.status(200).json(profile)
-    
     } catch (error) {
         res.status(500).json({message: error.message})
     }
