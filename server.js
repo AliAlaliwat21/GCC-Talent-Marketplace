@@ -76,6 +76,7 @@ app.get('/api/v1/jobs/my', verifyToken, jobsCtrl.myJobs)
 app.get('/api/v1/jobs/:jobId', jobsCtrl.showJob)
 app.get('/api/v1/jobs', jobsCtrl.allJobs)
 app.patch('/api/v1/jobs/:jobId', verifyToken, jobsCtrl.updateJob)
+app.patch('/api/v1/jobs/:jobId/publish', verifyToken, jobsCtrl.publishJob)
 
 
 //server

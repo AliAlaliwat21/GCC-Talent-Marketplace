@@ -273,6 +273,33 @@ const myJobs = async (req, res)=>{
     }
 }
 
+const publishJob = async (req, res)=>{
+    try {
+        const findJob = await Job.findById(req.params.jobId)
+
+         if (!findJob) return res.status(404).json({
+            message: 'Job not found!'
+        })
+
+        if (!findJob.client.equals(req.user._id)) return res.status(403).json({
+            message: 'You are not authorized to take such action!'
+        })
+
+        if (findJob.status !== 'draft') return res.status(400).json({
+            message: 'Only draft jobs can be published!'
+        })
+
+        findJob.status = 'open'
+        await findJob.save()
+
+        res.status(200).json({
+            message: 'Job has been published successfully!',
+            job: findJob
+        })
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
 
 module.exports = {
     create,
@@ -282,5 +309,6 @@ module.exports = {
     closeJob,
     reopenJob,
     deleteDraft,
-    myJobs
+    myJobs,
+    publishJob
 }
