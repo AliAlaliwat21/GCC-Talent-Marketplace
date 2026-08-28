@@ -1,4 +1,5 @@
 const FreelancerProfile = require('../models/freelancerProfile')
+const User = require('../models/user')
 
 const index = async (req, res) => {
     const profiles = await FreelancerProfile.find()
@@ -29,7 +30,21 @@ const create = async (req, res) => {
         
         if (existingProfile) {
             return res.status(409).json({message: "You already have a freelancer profile"})
-}
+        }
+        
+        const user = await User.findById(req.user._id)
+        
+        if (!user) {
+            return res.status(404).json({message: "User not found"})
+        }
+        if (req.body.country !== undefined) {
+            user.country = req.body.country
+        }
+        if (req.body.city !== undefined) {
+            user.city = req.body.city
+        }
+        await user.save()
+
         const profile = await FreelancerProfile.create({
             user: req.user._id,
             headline: req.body.headline,
