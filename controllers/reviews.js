@@ -5,12 +5,33 @@ const User = require('../models/user')
 
 const index = async(req,res)=>{
     try {
-        const reviews = await Review.find({
-            reviewee: req.params.id
+        let page = Number(req.query.page)
+        let limit = Number(req.query.limit)
+
+        if (!page || page < 1) {
+            page = 1
+        }
+        if (!limit || limit < 1) {
+            limit = 10
+        }
+        const allReviews = await Review.find({reviewee: req.params.id}).sort({createdAt: -1})
+
+        const startIndex = (page - 1) * limit
+        const endIndex = startIndex + limit
+        const reviews = []
+
+        for (let i = startIndex; i < endIndex && i < allReviews.length; i++) {
+            reviews.push(allReviews[i])
+        }
+
+        res.status(200).json({
+            reviews: reviews,
+            totalReviews: allReviews.length,
+            page: page,
+            limit: limit
         })
-        res.status(200).json(reviews)
     } catch (err) {
-         res.status(500).json({ message: err.message })
+        res.status(500).json({message: err.message})
     }
 }
 
@@ -85,9 +106,10 @@ const create = async(req,res)=>{
     }
 }
 
+/*
 const updateReview = async(req,res)=>{
     try {
-      const review = await Review.findbyId(req.params.id) 
+      const review = await Review.findById(req.params.id) 
       
       if(!review){
         return res.status(404).json({
@@ -136,9 +158,10 @@ const deleteReview = async(req,res)=>{
         })
     }
 }
+    */
 module.exports = {
     index,
     create,
-    updateReview,
-    deleteReview
+    // updateReview,
+    // deleteReview
 }
