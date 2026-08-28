@@ -32,13 +32,10 @@ const create = async(req,res)=>{
                 message: 'You cannot review this contract'
             })
         }
-
-        if(contract.status !== 'completed'){
-            return res.status(422).json({
-                message: 'You can only review a completed contract'
-            })
+        
+        if (contract.status !== "completed" && contract.status !== "cancelled") {
+            return res.status(422).json({message: "You can only review a completed or cancelled contract"})
         }
-
         const existingReview = await Review.findOne({
             contract:  contract._id,
             reviewer: req.user._id
