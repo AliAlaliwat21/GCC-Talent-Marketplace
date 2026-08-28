@@ -74,6 +74,34 @@ const create = async(req,res)=>{
     }
  }
 
+ const jobProposals = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id)
+        
+        if (!job) {
+            return res.status(404).json({message: "Job not found"})
+        }
+        if (job.client.toString() !== req.user._id.toString()) {
+            return res.status(403).json({message: "You cannot view proposals for this job"})
+        }
+        const proposals = await Proposal.find({job: job._id}).populate("freelancer", "username avatarUrl ratingAvg ratingCount")
+        const proposalsWithProfiles = []
+
+        for (let i = 0; i < proposals.length; i++) {
+            const freelancerProfile = await FreelancerProfile.findOne({user: proposals[i].freelancer._id}).populate('skills', 'name')
+            
+            proposalsWithProfiles.push({
+                proposal: proposals[i],
+                freelancerProfile: freelancerProfile
+            })
+        }
+        
+        res.status(200).json(proposalsWithProfiles)
+    } catch (error) {
+        res.status(500).json({message: error.message})
+    }
+}
+
 const update = async (req, res) => {
     try {
         const proposal = await Proposal.findById(req.params.id)
@@ -147,7 +175,7 @@ const withdraw = async(req,res)=>{
 
 const shortlist = async(req,res)=>{
     try {
-        const proposal = await Proposal.findById(req.params.id)
+        const proposal = await Proposal.findyId(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
@@ -327,6 +355,7 @@ const accept = async (req, res) => {
 module.exports = {
     create,
     freelancerProposals,
+    jobProposals,
     update,
     withdraw,
     shortlist,
