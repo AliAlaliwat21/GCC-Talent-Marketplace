@@ -308,7 +308,21 @@ const accept = async (req, res) => {
                 message: 'At least one milestone is required'
             })
         }
-
+        
+        let milestoneTotal = 0
+        
+        for (let i = 0; i < req.body.milestones.length; i++) {
+            const milestoneAmount = Number(req.body.milestones[i].amount)
+            
+            if (isNaN(milestoneAmount) || milestoneAmount <= 0) {
+                return res.status(400).json({message: "Every milestone amount must be greater than zero"})
+            }
+            milestoneTotal = milestoneTotal + milestoneAmount
+        }
+        if (milestoneTotal !== proposal.amount) {
+            return res.status(400).json({message: "Milestone total must equal the proposal amount"})
+        }
+        
         const contract = await Contract.create({
 
             client: job.client,
