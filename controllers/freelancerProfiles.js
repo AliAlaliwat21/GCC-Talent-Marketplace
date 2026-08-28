@@ -9,12 +9,25 @@ const index = async (req, res) => {
 const show = async (req, res) => {
     try {
         const profile = await FreelancerProfile.findById(req.params.id)
-        
         if (!profile) {
-            return res.status(404).json({ message: 'Freelancer not found'})
+            return res.status(404).json({message: "Freelancer profile not found"})
         }
+
+        const user = await User.findById(profile.user)
         
-        res.status(200).json(profile)
+        if (!user) {return res.status(404).json({message: "User not found"})
+        }
+    
+        res.status(200).json({profile: profile,
+            user: {
+                username: user.username,
+                avatarUrl: user.avatarUrl,
+                country: user.country,
+                city: user.city,
+                ratingAvg: user.ratingAvg,
+                ratingCount: user.ratingCount
+            }
+        })
     } catch (error) {
         res.status(500).json({message: error.message})
     }
