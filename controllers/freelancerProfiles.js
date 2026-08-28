@@ -48,29 +48,36 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const profile = await FreelancerProfile.findById(req.params.id)
-        
         if (!profile) {
-            return res.status(404).json({message: 'Freelancer profile not found'})
+            return res.status(404).json({message: "Freelancer profile not found"})
+        }
+        if (profile.user.toString() !== req.user._id.toString()) { 
+            return res.status(403).json({ message: "You cannot update this profile!"})
+        }
+        if (req.body.headline !== undefined) {
+            profile.headline = req.body.headline
+    }
+        if (req.body.bio !== undefined) {
+            profile.bio = req.body.bio
+        }
+        if (req.body.skills !== undefined) {
+            profile.skills = req.body.skills
+        }
+        if (req.body.hourlyRate !== undefined) {
+            profile.hourlyRate = req.body.hourlyRate
+        }
+        if (req.body.languages !== undefined) {
+            profile.languages = req.body.languages
+        }
+        if (req.body.availability !== undefined) {
+            profile.availability = req.body.availability
         }
         
-        if (profile.user.toString() !== req.user._id.toString()) { return res.status(401).json({ message: 'You cannot update this profile!'})
-        }
+        await profile.save()
+        res.status(200).json(profile)
     
-    const updatedProfile = await FreelancerProfile.findByIdAndUpdate(
-        req.params.id,
-        {
-            headline: req.body.headline,
-            bio: req.body.bio,
-            skills: req.body.skills,
-            hourlyRate: req.body.hourlyRate,
-            languages: req.body.languages,
-            availability: req.body.availability
-        }, { new: true }
-    )
-    
-    res.status(200).json(updatedProfile)
-} catch (error) {
-    res.status(500).json({message: error.message})
+    } catch (error) {
+        res.status(500).json({message: error.message})
     }
 }
 
