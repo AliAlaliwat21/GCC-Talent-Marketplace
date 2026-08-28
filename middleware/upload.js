@@ -7,15 +7,15 @@ const fileFilter = (req,file,cb)=>{
         'image/jpeg',
         'image/png',
         'image/webp',
-        'image/gif',
         'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/zip',
+        'application/x-zip-compressed'
     ]
 
     if(!allowedTypes.includes(file.mimetype)){
-        return cb(new Error('File type is not allowed'))
+        return cb(new Error("File type is not allowed"))
     }
+
     cb(null,true)
 }
 
