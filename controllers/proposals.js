@@ -114,7 +114,7 @@ const update = async (req, res) => {
 
 const withdraw = async(req,res)=>{
     try{
-        const proposal = await Proposal.findbyId(req.params.id)
+        const proposal = await Proposal.findById(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
@@ -147,7 +147,7 @@ const withdraw = async(req,res)=>{
 
 const shortlist = async(req,res)=>{
     try {
-        const proposal = await Proposal.findbyId(req.params.id)
+        const proposal = await Proposal.findById(req.params.id)
 
         if(!proposal){
             return res.status(404).json({
