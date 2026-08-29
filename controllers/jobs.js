@@ -44,7 +44,9 @@ const showJob = async (req, res)=>{
 
 const allJobs = async (req, res) =>{
     try {
-        const jobFilter = {}
+        const jobFilter = {
+            status: 'open'
+        }
 
         if (req.query.budgetType) jobFilter.budgetType = req.query.budgetType
 
@@ -141,9 +143,8 @@ const updateJob = async (req, res)=>{
             message: 'You are not authorized to take such action!'
         })
 
-        if (findJob.status !== 'open') return res.status(400).json({
-            message: 'Job cannot be edited!'
-        })
+        if (findJob.status !== 'open' && findJob.status !== 'draft')
+             return res.status(400).json({message: 'Job cannot be edited!'})
 
         const jobData = {
             title: req.body.title,
@@ -262,14 +263,17 @@ const myJobs = async (req, res)=>{
                 message: 'Only clients can view their own jobs!'
             })
         }
+        
+        const filter = {client: req.user._id}
+        if (req.query.status) {
+            filter.status = req.query.status
+        }
 
-        const jobs = await Job.find({client: req.user._id}).populate('category').populate('skills')
+        const jobs = await Job.find(filter).populate('category').populate('skills')
 
         res.status(200).json(jobs)
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        res.status(500).json({message: error.message})
     }
 }
 
