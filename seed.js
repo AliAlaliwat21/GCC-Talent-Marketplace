@@ -12,6 +12,7 @@ const Job = require("./models/job")
 const Proposal = require("./models/proposal")
 const Contract = require("./models/contract")
 const Review = require("./models/review")
+const Transaction = require("./models/transaction")
 
 const seedDatabase = async () => {
     try {
@@ -19,8 +20,18 @@ const seedDatabase = async () => {
 
         console.log("Connected to database")
 
+        await Review.deleteMany()
+        await Transaction.deleteMany()
+        await Contract.deleteMany()
+        await Proposal.deleteMany()
+        await Job.deleteMany()
+        await FreelancerProfile.deleteMany()
+        await ClientProfile.deleteMany()
+        await User.deleteMany()
         await Skill.deleteMany()
         await Category.deleteMany()
+
+        console.log("Old demo data deleted")
 
         const webDevelopment = await Category.create({
             name: 'Web Development',
