@@ -2,21 +2,29 @@ const mongoose = require('mongoose')
 const Contract = require('../models/contract')
 const User = require('../models/user')
 const Transaction = require('../models/transaction')
+const FreelancerProfile = require('../models/freelancerProfile')
 
 const index = async (req, res) => {
     try {
-        let contracts
+        const filter = {}
         
         if (req.user.role === "client") {
-            contracts = await Contract.find({client: req.user._id})
+            filter.client = req.user._id
+        } else if (req.user.role === "freelancer") {
+            filter.freelancer = req.user._id
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({message: "You cannot view contracts"})
         }
-        if (req.user.role === "freelancer") {
-            contracts = await Contract.find({freelancer: req.user._id})
+        
+        if (req.query.status) {
+            filter.status = req.query.status
         }
+
+        const contracts = await Contract.find(filter)
         
         res.status(200).json(contracts)
     } catch (error) {
-        res.status(500).json({ message: error.message})
+        res.status(500).json({message: error.message})
     }
 }
 
@@ -48,10 +56,18 @@ const addMilestone = async (req, res) => {
         if (contract.status !== 'active') {
             return res.status(400).json({message: "Milestones can only be added to active contracts"})
         }
+        
+        const milestoneAmount = Number(req.body.amount)
+
+        if (!milestoneAmount || milestoneAmount <= 0) {
+            return res.status(400).json({message: "Milestone amount must be greater than zero"})
+        }
+        contract.totalAmount = contract.totalAmount + milestoneAmount
+
         contract.milestones.push({
             title: req.body.title,
             description: req.body.description,
-            amount: req.body.amount,
+            amount: milestoneAmount,
             dueDate: req.body.dueDate
         })
 
@@ -78,6 +94,9 @@ const updateMilestone = async (req, res) => {
         if (contract.client.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot update this milestone"})
         }
+        if (contract.status !== "active") {
+            return res.status(400).json({message: "Milestones can only be updated on active contracts"})
+        }
         
         const milestone = contract.milestones.id(req.params.mid)
         
@@ -86,9 +105,7 @@ const updateMilestone = async (req, res) => {
         }
 
         if (milestone.status !== 'pending') {
-            return res.status(400).json({
-                message: "Only unfunded milestones can be updated"
-            })
+            return res.status(400).json({message: "Only unfunded milestones can be updated"})
         }
 
         if (req.body.title !== undefined) {
@@ -98,9 +115,14 @@ const updateMilestone = async (req, res) => {
         if (req.body.description !== undefined) {
             milestone.description = req.body.description
         }
-
         if (req.body.amount !== undefined) {
-            milestone.amount = req.body.amount
+            const newAmount = Number(req.body.amount)
+            
+            if (!newAmount || newAmount <= 0) {
+                return res.status(400).json({message: "Milestone amount must be greater than zero"})
+            }
+            contract.totalAmount = contract.totalAmount - milestone.amount + newAmount
+            milestone.amount = newAmount
         }
 
         if (req.body.dueDate !== undefined) {
@@ -281,11 +303,19 @@ const approveMilestone = async (req, res) => {
 
         const client = await User.findById(contract.client).session(session)
         const freelancer = await User.findById(contract.freelancer).session(session)
+                
+        const freelancerProfile = await FreelancerProfile.findOne({user: contract.freelancer}).session(session)
+        
+        if (!freelancerProfile) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Freelancer profile not found"})
+        }
         const escrowAmount = milestone.escrowAmount
         const feePercentage = Number(process.env.PLATFORM_FEE_PCT) || 10
 
-        const platformFee =
-            Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+        const platformFee = Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+
+        freelancerProfile.totalEarned = Math.round((freelancerProfile.totalEarned + escrowAmount - platformFee)*100)/100
     
         const freelancerBalanceAfterRelease = Math.round((freelancer.wallet.available + escrowAmount) * 100)/100
         const freelancerBalanceAfterFee = Math.round((freelancerBalanceAfterRelease - platformFee) * 100)/100
@@ -324,6 +354,7 @@ const approveMilestone = async (req, res) => {
         if (allMilestonesApproved) {
             contract.status = "completed"
             contract.completedAt = new Date()
+            freelancerProfile.completedContracts = freelancerProfile.completedContracts + 1
         }
 
         await Transaction.create([
@@ -353,6 +384,7 @@ const approveMilestone = async (req, res) => {
 
         await client.save({session})
         await freelancer.save({session})
+        await freelancerProfile.save({session})
         await contract.save({session})
         await session.commitTransaction()
         
