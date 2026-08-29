@@ -3,6 +3,7 @@ const Contract = require('../models/contract')
 const User = require('../models/user')
 const Transaction = require('../models/transaction')
 const FreelancerProfile = require('../models/freelancerProfile')
+const Job = require('../models/job')
 
 const index = async (req, res) => {
     try {
@@ -362,10 +363,28 @@ const approveMilestone = async (req, res) => {
             }
         }
         
-        if (allMilestonesApproved) {
+       if (allMilestonesApproved) {
             contract.status = "completed"
             contract.completedAt = new Date()
-            freelancerProfile.completedContracts = freelancerProfile.completedContracts + 1
+
+            freelancerProfile.completedContracts =
+                freelancerProfile.completedContracts + 1
+
+            if (contract.source.type === "job" && contract.source.job) {
+                const job = await Job.findById(contract.source.job).session(session)
+
+                if (!job) {
+                    await session.abortTransaction()
+
+                    return res.status(404).json({
+                        message: "Related job not found"
+                    })
+                }
+
+                job.status = "completed"
+
+                await job.save({session})
+            }
         }
 
         await Transaction.create([
