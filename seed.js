@@ -7,6 +7,7 @@ const Category = require('./models/category')
 const Skill = require('./models/skill')
 const User = require('./models/user')
 const ClientProfile = require('./models/clientProfile')
+const FreelancerProfile = require('./models/freelancerProfile')
 
 const seedDatabase = async () => {
     try {
@@ -37,8 +38,9 @@ const seedDatabase = async () => {
             icon: 'writing',
             isFeatured: true
         })
-
-        await Skill.insertMany([
+        
+        const skills = await Skill.insertMany([
+            
             {
                 name: 'HTML',
                 slug: 'html',
@@ -214,8 +216,236 @@ const seedDatabase = async () => {
 
             clients.push(client)
         }
+        
+        const freelancerPassword = bcrypt.hashSync("Freelancer123!", 10)
+        
+        const freelancerData = [
+            {
+                username: "shadowcoder",
+                headline: "JavaScript Developer",
+                hourlyRate: 20,
+                country: "Bahrain",
+                city: "Manama",
+                skillOne: 0,
+                skillTwo: 2
+            },
+            {
+                username: "pixelmage",
+                headline: "Front-End Developer",
+                hourlyRate: 18,
+                country: "Bahrain",
+                city: "Riffa",
+                skillOne: 0,
+                skillTwo: 1
+            },
+            {
+                username: "websamurai",
+                headline: "JavaScript Web Developer",
+                hourlyRate: 25,
+                country: "Saudi Arabia",
+                city: "Riyadh",
+                skillOne: 1,
+                skillTwo: 2
+            },
+            {
+                username: "codehunter",
+                headline: "Website Developer",
+                hourlyRate: 30,
+                country: "United Arab Emirates",
+                city: "Dubai",
+                skillOne: 0,
+                skillTwo: 2
+            },
+            {
+                username: "manaweb",
+                headline: "Front-End Website Developer",
+                hourlyRate: 22,
+                country: "Qatar",
+                city: "Doha",
+                skillOne: 0,
+                skillTwo: 1
+            },
+            {
+                username: "arcadedev",
+                headline: "JavaScript Developer",
+                hourlyRate: 24,
+                country: "Kuwait",
+                city: "Kuwait City",
+                skillOne: 1,
+                skillTwo: 2
+            },
+            {
+                username: "questcoder",
+                headline: "Web Application Developer",
+                hourlyRate: 21,
+                country: "Oman",
+                city: "Muscat",
+                skillOne: 0,
+                skillTwo: 2
+            },
+            {
+                username: "respawnweb",
+                headline: "Responsive Website Developer",
+                hourlyRate: 28,
+                country: "United Arab Emirates",
+                city: "Abu Dhabi",
+                skillOne: 0,
+                skillTwo: 1
+            },
+            {
+                username: "nightpixel",
+                headline: "Front-End Developer",
+                hourlyRate: 26,
+                country: "Saudi Arabia",
+                city: "Jeddah",
+                skillOne: 1,
+                skillTwo: 2
+            },
+            {
+                username: "dragonbyte",
+                headline: "JavaScript Website Developer",
+                hourlyRate: 23,
+                country: "Bahrain",
+                city: "Muharraq",
+                skillOne: 0,
+                skillTwo: 2
+            },
+            {
+                username: "logohero",
+                headline: "Logo Designer",
+                hourlyRate: 17,
+                country: "Bahrain",
+                city: "Manama",
+                skillOne: 3,
+                skillTwo: 4
+            },
+            {
+                username: "posterknight",
+                headline: "Gaming Poster Designer",
+                hourlyRate: 19,
+                country: "Saudi Arabia",
+                city: "Dammam",
+                skillOne: 3,
+                skillTwo: 4
+            },
+            {
+                username: "canvasninja",
+                headline: "Graphic Designer",
+                hourlyRate: 22,
+                country: "United Arab Emirates",
+                city: "Dubai",
+                skillOne: 3,
+                skillTwo: 4
+            },
+            {
+                username: "pixelartist",
+                headline: "Gaming Graphic Designer",
+                hourlyRate: 21,
+                country: "Qatar",
+                city: "Doha",
+                skillOne: 3,
+                skillTwo: 4
+            },
+            {
+                username: "guilddesigner",
+                headline: "Logo and Poster Designer",
+                hourlyRate: 20,
+                country: "Kuwait",
+                city: "Kuwait City",
+                skillOne: 3,
+                skillTwo: 4
+            },
+            {
+                username: "storyscribe",
+                headline: "Story Writer",
+                hourlyRate: 16,
+                country: "Oman",
+                city: "Muscat",
+                skillOne: 5,
+                skillTwo: 6
+            },
+            {
+                username: "moonwriter",
+                headline: "Gaming Content Writer",
+                hourlyRate: 18,
+                country: "Bahrain",
+                city: "Manama",
+                skillOne: 5,
+                skillTwo: 6
+            },
+            {
+                username: "questwriter",
+                headline: "Creative Story Writer",
+                hourlyRate: 20,
+                country: "Saudi Arabia",
+                city: "Riyadh",
+                skillOne: 5,
+                skillTwo: 6
+            },
+            {
+                username: "arabicscribe",
+                headline: "Arabic Writer and Translator",
+                hourlyRate: 24,
+                country: "United Arab Emirates",
+                city: "Sharjah",
+                skillOne: 5,
+                skillTwo: 6
+            },
+            {
+                username: "lorekeeper",
+                headline: "Story and Content Writer",
+                hourlyRate: 19,
+                country: "Qatar",
+                city: "Doha",
+                skillOne: 5,
+                skillTwo: 6
+            }
+        ]
 
+        const freelancers = []
+        
+        for (let i = 0; i < freelancerData.length; i++) {
+            const data = freelancerData[i]
+
+            const freelancer = await User.create({
+                username: data.username,
+                email: `${data.username}@gcctalent.com`,
+                password: freelancerPassword,
+                role: "freelancer",
+                status: "active",
+                isVerified: true,
+                country: data.country,
+                city: data.city
+            })
+
+            await FreelancerProfile.create({
+                user: freelancer._id,
+                headline: data.headline,
+                bio: `I provide ${data.headline.toLowerCase()} services for clients across the GCC.`,
+                skills: [
+                    skills[data.skillOne]._id,
+                    skills[data.skillTwo]._id
+                ],
+                hourlyRate: data.hourlyRate,
+                languages: [
+                    {
+                        name: "Arabic",
+                        level: "Fluent"
+                    },
+                    {
+                        name: "English",
+                        level: "Fluent"
+                    }
+                ],
+                availability: "full_time"
+            })
+
+            freelancers.push(freelancer)
+        }
+
+        console.log(`${freelancers.length} freelancers created`)
         console.log(`${clients.length} clients created`)
+
     } catch (error) {
         console.log(error.message)
     } finally {
