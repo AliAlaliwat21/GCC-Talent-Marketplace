@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Contract = require('../models/contract')
 const User = require('../models/user')
 const Transaction = require('../models/transaction')
+const FreelancerProfile = require('../models/freelancerProfile')
 
 const index = async (req, res) => {
     try {
@@ -302,11 +303,19 @@ const approveMilestone = async (req, res) => {
 
         const client = await User.findById(contract.client).session(session)
         const freelancer = await User.findById(contract.freelancer).session(session)
+                
+        const freelancerProfile = await FreelancerProfile.findOne({user: contract.freelancer}).session(session)
+        
+        if (!freelancerProfile) {
+            await session.abortTransaction()
+            return res.status(404).json({message: "Freelancer profile not found"})
+        }
         const escrowAmount = milestone.escrowAmount
         const feePercentage = Number(process.env.PLATFORM_FEE_PCT) || 10
 
-        const platformFee =
-            Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+        const platformFee = Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+
+        freelancerProfile.totalEarned = Math.round((freelancerProfile.totalEarned + escrowAmount - platformFee)*100)/100
     
         const freelancerBalanceAfterRelease = Math.round((freelancer.wallet.available + escrowAmount) * 100)/100
         const freelancerBalanceAfterFee = Math.round((freelancerBalanceAfterRelease - platformFee) * 100)/100
@@ -345,6 +354,7 @@ const approveMilestone = async (req, res) => {
         if (allMilestonesApproved) {
             contract.status = "completed"
             contract.completedAt = new Date()
+            freelancerProfile.completedContracts = freelancerProfile.completedContracts + 1
         }
 
         await Transaction.create([
@@ -374,6 +384,7 @@ const approveMilestone = async (req, res) => {
 
         await client.save({session})
         await freelancer.save({session})
+        await freelancerProfile.save({session})
         await contract.save({session})
         await session.commitTransaction()
         
