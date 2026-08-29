@@ -56,8 +56,8 @@ const signUp = async (req, res) => {
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 1000,
-            // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
         res.status(201).json({ accessToken })
@@ -95,11 +95,11 @@ const signIn = async (req, res) => {
         userInDatabase.refreshTokenHash = refreshTokenHash
         await userInDatabase.save()
 
-            res.cookie('refreshToken', refreshToken, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 1000
-            // maxage takes in milliseconds and we want 7 days, converting that to milliseconds would make for a too big of a number so we do what we did here 
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
         res.status(200).json({ accessToken })
@@ -147,7 +147,8 @@ const refresh = async (req, res)=>{
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             sameSite: 'lax',
-            maxAge:  7 * 24 * 60 * 1000
+            secure: process.env.NODE_ENV === 'production',
+            maxAge:  7 * 24 * 60 * 60 *  1000
         })
 
         res.status(200).json({
@@ -175,7 +176,13 @@ const logout = async (req, res)=>{
         user.refreshTokenHash = null
         await user.save()
 
-        res.clearCookie('refreshToken')
+        res.clearCookie('refreshToken',
+            {
+                httpOnly: true,
+                secure: process.env.NODE_END === 'production',
+                sameSite: 'lax'
+            }
+        )
 
         res.status(200).json({message: 'Logged Out Successfully.'})
     } catch (error) {
