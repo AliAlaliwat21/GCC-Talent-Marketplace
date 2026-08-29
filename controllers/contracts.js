@@ -3,6 +3,7 @@ const Contract = require('../models/contract')
 const User = require('../models/user')
 const Transaction = require('../models/transaction')
 const FreelancerProfile = require('../models/freelancerProfile')
+const Job = require('../models/job')
 
 const index = async (req, res) => {
     try {
@@ -35,7 +36,9 @@ const show = async (req, res) => {
         if (!contract) {
             return res.status(404).json({message: "Contract not found"})
         }
-        if (contract.client.toString() !== req.user._id.toString() && contract.freelancer.toString() !== req.user._id.toString()) {
+        if (req.user.role !== 'admin' && 
+            contract.client.toString() !== req.user._id.toString() && 
+            contract.freelancer.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot view this contract"})
         }
         res.status(200).json(contract)
@@ -150,13 +153,22 @@ const fundMilestone = async (req, res) => {
         session.startTransaction()
         
         const contract = await Contract.findById(req.params.id).session(session)
+
         if (!contract) {
             await session.abortTransaction()
             return res.status(404).json({message: "Contract not found"})
         }
+
         if (contract.client.toString() !== req.user._id.toString()) {
             await session.abortTransaction()
             return res.status(403).json({message: "You cannot fund this milestone"})
+        }
+
+        if (contract.status !== 'active'){
+            await session.abortTransaction()
+            return res.status(422).json({
+                message: 'Milestones can only be funded on active contracts'
+            })
         }
 
         const milestone = contract.milestones.id(req.params.mid)
@@ -351,10 +363,28 @@ const approveMilestone = async (req, res) => {
             }
         }
         
-        if (allMilestonesApproved) {
+       if (allMilestonesApproved) {
             contract.status = "completed"
             contract.completedAt = new Date()
-            freelancerProfile.completedContracts = freelancerProfile.completedContracts + 1
+
+            freelancerProfile.completedContracts =
+                freelancerProfile.completedContracts + 1
+
+            if (contract.source.type === "job" && contract.source.job) {
+                const job = await Job.findById(contract.source.job).session(session)
+
+                if (!job) {
+                    await session.abortTransaction()
+
+                    return res.status(404).json({
+                        message: "Related job not found"
+                    })
+                }
+
+                job.status = "completed"
+
+                await job.save({session})
+            }
         }
 
         await Transaction.create([
