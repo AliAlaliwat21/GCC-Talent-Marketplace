@@ -103,16 +103,21 @@ const allJobs = async (req, res) =>{
                 $gte: pastDate
             }
         }
-
+        
         let sortOption = {}
-
-        if (req.query.sort){
-            if (req.query.sort === 'newest'){
+        
+        if (req.query.sort) {
+            if (req.query.sort === 'newest') {
                 sortOption.createdAt = -1
             }
-
-            if (req.query.sort === 'oldest'){
+            if (req.query.sort === 'oldest') {
                 sortOption.createdAt = 1
+            }
+            if (req.query.sort === 'budget_low') {
+                sortOption.budgetMin = 1
+            }
+            if (req.query.sort === 'budget_high') {
+                sortOption.budgetMin = -1
             }
         }
 
