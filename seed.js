@@ -11,6 +11,7 @@ const FreelancerProfile = require('./models/freelancerProfile')
 const Job = require("./models/job")
 const Proposal = require("./models/proposal")
 const Contract = require("./models/contract")
+const Review = require("./models/review")
 
 const seedDatabase = async () => {
     try {
@@ -457,7 +458,7 @@ const seedDatabase = async () => {
             {
                 client: clients[0]._id,
                 title: "Build a gaming community website",
-                description: "Create a responsive website where players can view events and join gaming tournaments.",
+                description: "Create a responsive website where players can view events and join gaming tournaments",
                 category: webDevelopment._id,
                 skills: [
                     skills[0]._id,
@@ -475,7 +476,7 @@ const seedDatabase = async () => {
             {
                 client: clients[1]._id,
                 title: "Create a website for an arcade",
-                description: "Build a simple website showing arcade games, opening hours and event information.",
+                description: "Build a simple website showing arcade games, opening hours and event information",
                 category: webDevelopment._id,
                 skills: [
                     skills[0]._id,
@@ -492,7 +493,7 @@ const seedDatabase = async () => {
             {
                 client: clients[2]._id,
                 title: "Develop a fantasy game landing page",
-                description: "Create a landing page introducing a new fantasy game with characters and screenshots.",
+                description: "Create a landing page introducing a new fantasy game with characters and screenshots",
                 category: webDevelopment._id,
                 skills: [
                     skills[0]._id,
@@ -510,7 +511,7 @@ const seedDatabase = async () => {
             {
                 client: clients[3]._id,
                 title: "Design a logo for an adventure game",
-                description: "Create a simple fantasy-style logo for a new adventure game.",
+                description: "Create a simple fantasy-style logo for a new adventure game",
                 category: graphicDesign._id,
                 skills: [
                     skills[3]._id
@@ -526,7 +527,7 @@ const seedDatabase = async () => {
             {
                 client: clients[4]._id,
                 title: "Write short stories for a manga website",
-                description: "Write original short fantasy stories that can be published on a manga community website.",
+                description: "Write original short fantasy stories that can be published on a manga community website",
                 category: writingTranslation._id,
                 skills: [
                     skills[5]._id
@@ -542,7 +543,7 @@ const seedDatabase = async () => {
             {
                 client: clients[5]._id,
                 title: "Design posters for a gaming tournament",
-                description: "Create promotional posters for an upcoming local gaming tournament.",
+                description: "Create promotional posters for an upcoming local gaming tournament",
                 category: graphicDesign._id,
                 skills: [
                     skills[4]._id
@@ -558,7 +559,7 @@ const seedDatabase = async () => {
             {
                 client: clients[6]._id,
                 title: "Build a tournament registration page",
-                description: "Create a registration page for players joining local gaming competitions.",
+                description: "Create a registration page for players joining local gaming competitions",
                 category: webDevelopment._id,
                 skills: [
                     skills[0]._id,
@@ -576,7 +577,7 @@ const seedDatabase = async () => {
             {
                 client: clients[7]._id,
                 title: "Create artwork for an anime event",
-                description: "Design promotional artwork for a local anime and gaming event.",
+                description: "Design promotional artwork for a local anime and gaming event",
                 category: graphicDesign._id,
                 skills: [
                     skills[3]._id,
@@ -593,7 +594,7 @@ const seedDatabase = async () => {
             {
                 client: clients[8]._id,
                 title: "Develop a website for gaming articles",
-                description: "Build a responsive website where gaming news and articles can be published.",
+                description: "Build a responsive website where gaming news and articles can be published",
                 category: webDevelopment._id,
                 skills: [
                     skills[0]._id,
@@ -611,7 +612,7 @@ const seedDatabase = async () => {
             {
                 client: clients[9]._id,
                 title: "Translate gaming website content into Arabic",
-                description: "Translate website pages and gaming content from English into Arabic.",
+                description: "Translate website pages and gaming content from English into Arabic",
                 category: writingTranslation._id,
                 skills: [
                     skills[6]._id
@@ -632,7 +633,7 @@ const seedDatabase = async () => {
         const firstProposal = await Proposal.create({
             job: jobs[0]._id,
             freelancer: freelancers[0]._id,
-            coverLetter: "I can build this gaming community website using HTML, CSS and JavaScript.",
+            coverLetter: "I can build this gaming community website using HTML, CSS and JavaScript",
             amount: 900,
             deliveryDays: 20,
             status: "pending"
@@ -643,7 +644,7 @@ const seedDatabase = async () => {
         const secondProposal = await Proposal.create({
             job: jobs[1]._id,
             freelancer: freelancers[1]._id,
-            coverLetter: "I can create a responsive arcade website with a clean design.",
+            coverLetter: "I can create a responsive arcade website with a clean design",
             amount: 650,
             deliveryDays: 15,
             status: "shortlisted"
@@ -654,7 +655,7 @@ const seedDatabase = async () => {
         const acceptedProposal = await Proposal.create({
             job: jobs[8]._id,
             freelancer: freelancers[2]._id,
-            coverLetter: "I can develop the gaming articles website and complete every required page.",
+            coverLetter: "I can develop the gaming articles website and complete every required page",
             amount: 1100,
             deliveryDays: 25,
             status: "accepted"
@@ -665,7 +666,7 @@ const seedDatabase = async () => {
         const completedProposal = await Proposal.create({
             job: jobs[9]._id,
             freelancer: freelancers[18]._id,
-            coverLetter: "I can translate the website content into clear and natural Arabic.",
+            coverLetter: "I can translate the website content into clear and natural Arabic",
             amount: 500,
             deliveryDays: 10,
             status: "accepted"
@@ -700,14 +701,14 @@ const seedDatabase = async () => {
             milestones: [
                 {
                     title: "Create the website structure",
-                    description: "Build the main website pages and navigation.",
+                    description: "Build the main website pages and navigation",
                     amount: 400,
                     status: "approved",
                     approvedAt: new Date()
                 },
                 {
                     title: "Create the article pages",
-                    description: "Build and style the gaming article pages.",
+                    description: "Build and style the gaming article pages",
                     amount: 700,
                     status: "in_progress",
                     escrowAmount: 700,
@@ -731,7 +732,7 @@ const seedDatabase = async () => {
             milestones: [
                 {
                     title: "Translate website content",
-                    description: "Translate all website pages into Arabic.",
+                    description: "Translate all website pages into Arabic",
                     amount: 500,
                     status: "approved",
                     approvedAt: new Date()
@@ -746,6 +747,37 @@ const seedDatabase = async () => {
         ]
 
         console.log(`${contracts.length} contracts created`)
+        
+        const clientReview = await Review.create({
+            contract: completedContract._id,
+            reviewer: clients[9]._id,
+            reviewee: freelancers[18]._id,
+            rating: 5,
+            comment: "The translation was clear and completed on time"
+        })
+
+        const freelancerReview = await Review.create({
+            contract: completedContract._id,
+            reviewer: freelancers[18]._id,
+            reviewee: clients[9]._id,
+            rating: 4,
+            comment: "The client provided clear instructions and responded quickly."
+        })
+
+        freelancers[18].ratingAvg = 5
+        freelancers[18].ratingCount = 1
+
+        clients[9].ratingAvg = 4
+        clients[9].ratingCount = 1
+
+        await freelancers[18].save()
+        await clients[9].save()
+
+        const reviews = [
+            clientReview,
+            freelancerReview
+        ]
+        console.log(`${reviews.length} reviews created`)
 
     } catch (error) {
         console.log(error.message)
