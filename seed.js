@@ -1,5 +1,7 @@
 require('dotenv').config()
 
+const dns = require("node:dns")
+dns.setServers(["8.8.8.8", "1.1.1.1"])
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
@@ -13,6 +15,7 @@ const Proposal = require("./models/proposal")
 const Contract = require("./models/contract")
 const Review = require("./models/review")
 const Transaction = require("./models/transaction")
+
 
 const seedDatabase = async () => {
     try {
