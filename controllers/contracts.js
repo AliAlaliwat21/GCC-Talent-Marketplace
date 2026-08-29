@@ -5,18 +5,25 @@ const Transaction = require('../models/transaction')
 
 const index = async (req, res) => {
     try {
-        let contracts
+        const filter = {}
         
         if (req.user.role === "client") {
-            contracts = await Contract.find({client: req.user._id})
+            filter.client = req.user._id
+        } else if (req.user.role === "freelancer") {
+            filter.freelancer = req.user._id
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({message: "You cannot view contracts"})
         }
-        if (req.user.role === "freelancer") {
-            contracts = await Contract.find({freelancer: req.user._id})
+        
+        if (req.query.status) {
+            filter.status = req.query.status
         }
+
+        const contracts = await Contract.find(filter)
         
         res.status(200).json(contracts)
     } catch (error) {
-        res.status(500).json({ message: error.message})
+        res.status(500).json({message: error.message})
     }
 }
 
@@ -86,6 +93,9 @@ const updateMilestone = async (req, res) => {
         if (contract.client.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot update this milestone"})
         }
+        if (contract.status !== "active") {
+            return res.status(400).json({message: "Milestones can only be updated on active contracts"})
+        }
         
         const milestone = contract.milestones.id(req.params.mid)
         
@@ -94,9 +104,7 @@ const updateMilestone = async (req, res) => {
         }
 
         if (milestone.status !== 'pending') {
-            return res.status(400).json({
-                message: "Only unfunded milestones can be updated"
-            })
+            return res.status(400).json({message: "Only unfunded milestones can be updated"})
         }
 
         if (req.body.title !== undefined) {
