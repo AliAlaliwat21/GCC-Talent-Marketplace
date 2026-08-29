@@ -9,6 +9,7 @@ const User = require('./models/user')
 const ClientProfile = require('./models/clientProfile')
 const FreelancerProfile = require('./models/freelancerProfile')
 const Job = require("./models/job")
+const Proposal = require("./models/proposal")
 
 const seedDatabase = async () => {
     try {
@@ -623,8 +624,65 @@ const seedDatabase = async () => {
                 status: "completed"
             }
         ])
-
         console.log(`${jobs.length} jobs created`)
+        
+        const proposals = []
+        
+        const firstProposal = await Proposal.create({
+            job: jobs[0]._id,
+            freelancer: freelancers[0]._id,
+            coverLetter: "I can build this gaming community website using HTML, CSS and JavaScript.",
+            amount: 900,
+            deliveryDays: 20,
+            status: "pending"
+        })
+
+        proposals.push(firstProposal)
+
+        const secondProposal = await Proposal.create({
+            job: jobs[1]._id,
+            freelancer: freelancers[1]._id,
+            coverLetter: "I can create a responsive arcade website with a clean design.",
+            amount: 650,
+            deliveryDays: 15,
+            status: "shortlisted"
+        })
+
+        proposals.push(secondProposal)
+
+        const acceptedProposal = await Proposal.create({
+            job: jobs[8]._id,
+            freelancer: freelancers[2]._id,
+            coverLetter: "I can develop the gaming articles website and complete every required page.",
+            amount: 1100,
+            deliveryDays: 25,
+            status: "accepted"
+        })
+
+        proposals.push(acceptedProposal)
+
+        const completedProposal = await Proposal.create({
+            job: jobs[9]._id,
+            freelancer: freelancers[18]._id,
+            coverLetter: "I can translate the website content into clear and natural Arabic.",
+            amount: 500,
+            deliveryDays: 10,
+            status: "accepted"
+        })
+
+        proposals.push(completedProposal)
+
+        jobs[0].proposalsCount = 1
+        jobs[1].proposalsCount = 1
+        jobs[8].proposalsCount = 1
+        jobs[9].proposalsCount = 1
+
+        await jobs[0].save()
+        await jobs[1].save()
+        await jobs[8].save()
+        await jobs[9].save()
+        
+        console.log(`${proposals.length} proposals created`)
 
     } catch (error) {
         console.log(error.message)
