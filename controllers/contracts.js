@@ -3,7 +3,14 @@ const Contract = require('../models/contract')
 const User = require('../models/user')
 const Transaction = require('../models/transaction')
 const FreelancerProfile = require('../models/freelancerProfile')
+const ClientProfile = require("../models/clientProfile")
 const Job = require('../models/job')
+const getPagination = require("../utils/pagination")
+const {
+    roundMoney,
+    calculateRelease,
+    calculateFundingBalances
+} = require("../services/wallet")
 
 const index = async (req, res) => {
     try {
@@ -21,9 +28,21 @@ const index = async (req, res) => {
             filter.status = req.query.status
         }
 
+        const pagination = getPagination(req.query)
         const contracts = await Contract.find(filter)
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+
+        const total = await Contract.countDocuments(filter)
         
-        res.status(200).json(contracts)
+        res.status(200).json({
+            contracts: contracts,
+            page: pagination.page,
+            limit: pagination.limit,
+            total: total,
+            totalPages: Math.ceil(total / pagination.limit)
+        })
     } catch (error) {
         res.status(500).json({message: error.message})
     }
@@ -32,13 +51,17 @@ const index = async (req, res) => {
 const show = async (req, res) => {
     try {
         const contract = await Contract.findById(req.params.id)
+            .populate("client", "username avatarUrl ratingAvg ratingCount isVerified")
+            .populate("freelancer", "username avatarUrl ratingAvg ratingCount isVerified")
+            .populate("activity.by", "username avatarUrl")
+            .populate("messages.sender", "username avatarUrl")
         
         if (!contract) {
             return res.status(404).json({message: "Contract not found"})
         }
         if (req.user.role !== 'admin' && 
-            contract.client.toString() !== req.user._id.toString() && 
-            contract.freelancer.toString() !== req.user._id.toString()) {
+            contract.client._id.toString() !== req.user._id.toString() &&
+            contract.freelancer._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot view this contract"})
         }
 
@@ -100,7 +123,9 @@ const show = async (req, res) => {
 
         res.status(200).json({
             contract: contract,
-            moneySummary: moneySummary
+            moneySummary: moneySummary,
+            timeline: contract.activity,
+            messages: contract.messages
         })
 
     } catch (error) {
@@ -253,8 +278,14 @@ const fundMilestone = async (req, res) => {
             return res.status(422).json({message: "Insufficient wallet balance"})
         }
 
-        client.wallet.available = client.wallet.available - milestone.amount
-        client.wallet.pending = client.wallet.pending + milestone.amount
+        const fundingBalances = calculateFundingBalances(
+            client.wallet.available,
+            client.wallet.pending,
+            milestone.amount
+        )
+
+        client.wallet.available = fundingBalances.available
+        client.wallet.pending = fundingBalances.pending
 
         milestone.status = "funded"
         milestone.escrowAmount = milestone.amount
@@ -276,7 +307,7 @@ const fundMilestone = async (req, res) => {
             milestoneId: milestone._id,
             reference: `escrow-fund-${contract._id}-${milestone._id}`,
             status: 'completed'
-        }], {session})
+        }], {session, ordered: true})
 
         await client.save({session})
         await contract.save({session})
@@ -388,12 +419,15 @@ const approveMilestone = async (req, res) => {
         const escrowAmount = milestone.escrowAmount
         const feePercentage = Number(process.env.PLATFORM_FEE_PCT) || 10
 
-        const platformFee = Math.round((escrowAmount * feePercentage / 100) * 100) / 100
+        const release = calculateRelease(escrowAmount, feePercentage)
+        const platformFee = release.platformFee
 
-        freelancerProfile.totalEarned = Math.round((freelancerProfile.totalEarned + escrowAmount - platformFee)*100)/100
+        freelancerProfile.totalEarned = roundMoney(
+            freelancerProfile.totalEarned + release.freelancerAmount
+        )
     
-        const freelancerBalanceAfterRelease = Math.round((freelancer.wallet.available + escrowAmount) * 100)/100
-        const freelancerBalanceAfterFee = Math.round((freelancerBalanceAfterRelease - platformFee) * 100)/100
+        const freelancerBalanceAfterRelease = roundMoney(freelancer.wallet.available + escrowAmount)
+        const freelancerBalanceAfterFee = roundMoney(freelancer.wallet.available + release.freelancerAmount)
 
         if (client.wallet.pending < escrowAmount) {
             await session.abortTransaction()
@@ -417,6 +451,14 @@ const approveMilestone = async (req, res) => {
             message: `Milestone approved: ${milestone.title}`
         })
 
+        const clientProfile = await ClientProfile.findOne({
+            user: contract.client
+        }).session(session)
+
+        if (clientProfile) {
+            clientProfile.totalSpent = roundMoney(clientProfile.totalSpent + escrowAmount)
+        }
+
         let allMilestonesApproved = true
 
         for (let i = 0; i < contract.milestones.length; i++) {
@@ -432,6 +474,10 @@ const approveMilestone = async (req, res) => {
 
             freelancerProfile.completedContracts =
                 freelancerProfile.completedContracts + 1
+
+            if (clientProfile) {
+                clientProfile.completedContracts = clientProfile.completedContracts + 1
+            }
 
             if (contract.source.type === "job" && contract.source.job) {
                 const job = await Job.findById(contract.source.job).session(session)
@@ -473,11 +519,16 @@ const approveMilestone = async (req, res) => {
                 reference: `platform-fee-${contract._id}-${milestone._id}`,
                 status: "completed"
             }
-        ], {session})
+        ], {session, ordered: true})
 
         await client.save({session})
         await freelancer.save({session})
         await freelancerProfile.save({session})
+
+        if (clientProfile) {
+            await clientProfile.save({session})
+        }
+
         await contract.save({session})
         await session.commitTransaction()
         
@@ -491,6 +542,35 @@ const approveMilestone = async (req, res) => {
         res.status(500).json({message: error.message})
     } finally {
         await session.endSession()
+    }
+}
+
+const sendMessage = async (req, res) => {
+    try {
+        const contract = await Contract.findById(req.params.id)
+
+        if (!contract) {
+            return res.status(404).json({message: "Contract not found"})
+        }
+
+        if (
+            contract.client.toString() !== req.user._id.toString() &&
+            contract.freelancer.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({message: "You cannot message in this contract"})
+        }
+
+        contract.messages.push({
+            sender: req.user._id,
+            text: req.body.text,
+            attachments: req.body.attachments || []
+        })
+
+        await contract.save()
+
+        res.status(201).json(contract.messages[contract.messages.length - 1])
+    } catch (error) {
+        res.status(500).json({message: error.message})
     }
 }
 
@@ -609,7 +689,7 @@ const cancelContract = async (req, res) => {
         })
         
         if (refundTransactions.length > 0) {
-            await Transaction.create(refundTransactions, {session})
+            await Transaction.create(refundTransactions, {session, ordered: true})
         }
         await client.save({session})
         await contract.save({session})
@@ -636,5 +716,6 @@ module.exports = {
     deliverMilestone,
     approveMilestone,
     requestRevision,
-    cancelContract
+    cancelContract,
+    sendMessage
 }

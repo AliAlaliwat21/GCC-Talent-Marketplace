@@ -1,0 +1,882 @@
+openapi: 3.0.3
+info:
+  title: GCC Talent Marketplace API
+  version: 1.0.0
+  description: REST API for the GCC Talent Marketplace backend.
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+tags:
+  - name: Auth
+  - name: Profiles
+  - name: Jobs
+  - name: Proposals
+  - name: Contracts
+  - name: Wallet
+  - name: Reviews
+  - name: Master Data
+  - name: Admin
+paths:
+  /health:
+    get:
+      summary: Check API and database health
+      responses:
+        "200":
+          description: Health status
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a client or freelancer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Register"
+      responses:
+        "201":
+          description: Account created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Username or email already exists
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login"
+      responses:
+        "200":
+          description: Login successful; refresh token is set as an httpOnly cookie
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate the refresh token and issue a new access token
+      responses:
+        "200":
+          description: Token refreshed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Clear and invalidate the refresh token
+      responses:
+        "200":
+          description: Logged out
+  /users/me:
+    get:
+      tags: [Profiles]
+      summary: Get the current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+    patch:
+      tags: [Profiles]
+      summary: Update current account settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: User updated
+  /users/me/password:
+    patch:
+      tags: [Profiles]
+      summary: Change current password
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Password changed
+  /freelancers:
+    get:
+      tags: [Profiles]
+      summary: Search and paginate freelancers
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: skills
+          schema:
+            type: string
+        - in: query
+          name: country
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Freelancer results
+    post:
+      tags: [Profiles]
+      summary: Create the current freelancer profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Profile created
+  /freelancers/me:
+    put:
+      tags: [Profiles]
+      summary: Create or replace the current freelancer profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Profile saved
+  /freelancers/{userId}:
+    get:
+      tags: [Profiles]
+      summary: View a public freelancer profile, reviews and gigs
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Public freelancer profile
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /freelancers/{id}/portfolio:
+    post:
+      tags: [Profiles]
+      summary: Add a portfolio item
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Portfolio item added
+  /freelancers/{id}/portfolio/{portfolioId}:
+    patch:
+      tags: [Profiles]
+      summary: Update a portfolio item
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Portfolio item updated
+    delete:
+      tags: [Profiles]
+      summary: Delete a portfolio item
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portfolio item deleted
+  /clients/me:
+    get:
+      tags: [Profiles]
+      summary: Get the current client profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Client profile
+    post:
+      tags: [Profiles]
+      summary: Create the current client profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Profile created
+    put:
+      tags: [Profiles]
+      summary: Create or replace the current client profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Profile saved
+    patch:
+      tags: [Profiles]
+      summary: Update the current client profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Profile updated
+  /clients/{userId}:
+    get:
+      tags: [Profiles]
+      summary: View a public client profile and hiring summary
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Public client profile
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: Browse and filter open jobs
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: skills
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            enum: [newest, oldest, budget_low, budget_high]
+      responses:
+        "200":
+          description: Paginated jobs
+    post:
+      tags: [Jobs]
+      summary: Create a draft or open job
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Job created
+  /jobs/mine:
+    get:
+      tags: [Jobs]
+      summary: List the current client's jobs with status counts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Client jobs and counts
+  /jobs/{jobId}:
+    get:
+      tags: [Jobs]
+      summary: View an open job; owners may also view their drafts
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job details
+    patch:
+      tags: [Jobs]
+      summary: Edit an owned open or draft job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Job updated
+    delete:
+      tags: [Jobs]
+      summary: Delete an owned draft job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Draft deleted
+  /jobs/{jobId}/publish:
+    patch:
+      tags: [Jobs]
+      summary: Publish an owned draft
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job published
+  /jobs/{jobId}/close:
+    post:
+      tags: [Jobs]
+      summary: Close an owned open job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job closed
+  /jobs/{jobId}/reopen:
+    post:
+      tags: [Jobs]
+      summary: Reopen an owned closed job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job reopened
+  /jobs/{id}/proposals:
+    get:
+      tags: [Proposals]
+      summary: List proposals for an owned job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated proposals
+    post:
+      tags: [Proposals]
+      summary: Submit a proposal to an open job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Proposal submitted
+  /proposals/mine:
+    get:
+      tags: [Proposals]
+      summary: List the current freelancer's proposals
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated proposals
+  /proposals/{id}:
+    patch:
+      tags: [Proposals]
+      summary: Edit a pending owned proposal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Proposal updated
+  /proposals/{id}/{action}:
+    post:
+      tags: [Proposals]
+      summary: Withdraw, shortlist, decline or accept a proposal
+      description: The action must be withdraw, shortlist, decline, or accept. Accept requires milestone data.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - in: path
+          name: action
+          required: true
+          schema:
+            enum: [withdraw, shortlist, decline, accept]
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Proposal status updated
+        "201":
+          description: Proposal accepted and contract created
+  /contracts:
+    get:
+      tags: [Contracts]
+      summary: List the current user's contracts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated contracts
+  /contracts/{id}:
+    get:
+      tags: [Contracts]
+      summary: Get the contract workspace, timeline, messages and money summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Contract workspace
+  /contracts/{id}/milestones:
+    post:
+      tags: [Contracts]
+      summary: Add a milestone to an active contract
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Milestone added
+  /contracts/{id}/milestones/{mid}:
+    patch:
+      tags: [Contracts]
+      summary: Update an unfunded milestone
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/MilestoneId"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Milestone updated
+  /contracts/{id}/milestones/{mid}/{action}:
+    post:
+      tags: [Contracts]
+      summary: Fund, deliver or approve a milestone
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/MilestoneId"
+        - in: path
+          name: action
+          required: true
+          schema:
+            enum: [fund, deliver, approve]
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Milestone state changed
+  /contracts/{id}/milestones/{mid}/request-revision:
+    post:
+      tags: [Contracts]
+      summary: Request changes to a delivered milestone
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/MilestoneId"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Revision requested
+  /contracts/{id}/cancel:
+    post:
+      tags: [Contracts]
+      summary: Cancel a contract and refund unreleased escrow
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Contract cancelled
+  /contracts/{id}/messages:
+    post:
+      tags: [Contracts]
+      summary: Add a message to a contract workspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Message added
+  /contracts/{id}/reviews:
+    post:
+      tags: [Reviews]
+      summary: Review the other party after completion or cancellation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Review created
+  /users/{id}/reviews:
+    get:
+      tags: [Reviews]
+      summary: List a user's reviews newest first
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated reviews
+  /wallet:
+    get:
+      tags: [Wallet]
+      summary: Get wallet balances and transaction history
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Wallet and transactions
+  /wallet/deposit:
+    post:
+      tags: [Wallet]
+      summary: Add mock funds idempotently
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, cardNumber]
+              properties:
+                amount:
+                  type: number
+                  minimum: 1
+                cardNumber:
+                  type: string
+      responses:
+        "200":
+          description: Funds added or a matching previous result returned
+        "402":
+          description: Mock card declined
+  /uploads:
+    post:
+      tags: [Profiles]
+      summary: Upload an allowed image or document to Cloudinary
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: File uploaded
+  /categories:
+    get:
+      tags: [Master Data]
+      summary: List categories
+      responses:
+        "200":
+          description: Categories
+  /skills:
+    get:
+      tags: [Master Data]
+      summary: List skills
+      responses:
+        "200":
+          description: Skills
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get platform KPIs
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Platform statistics
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Search and paginate users
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated users
+  /admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: View a user with contracts and transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: User administration details
+    delete:
+      tags: [Admin]
+      summary: Delete a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: User deleted
+  /admin/users/{id}/status:
+    patch:
+      tags: [Admin]
+      summary: Suspend or unsuspend a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Status updated
+  /admin/users/{id}/verify:
+    patch:
+      tags: [Admin]
+      summary: Mark a user verified
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: User verified
+  /admin/categories:
+    post:
+      tags: [Admin]
+      summary: Create a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Category created
+  /admin/categories/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update a category
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Category updated
+    delete:
+      tags: [Admin]
+      summary: Delete a category
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Category deleted
+  /admin/skills:
+    post:
+      tags: [Admin]
+      summary: Create a skill
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "201":
+          description: Skill created
+  /admin/skills/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update a skill
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/JsonBody"
+      responses:
+        "200":
+          description: Skill updated
+    delete:
+      tags: [Admin]
+      summary: Delete a skill
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Skill deleted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+    Id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
+    JobId:
+      in: path
+      name: jobId
+      required: true
+      schema:
+        type: string
+    MilestoneId:
+      in: path
+      name: mid
+      required: true
+      schema:
+        type: string
+  requestBodies:
+    JsonBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    Register:
+      type: object
+      required: [username, email, password, role]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [client, freelancer]
+    Login:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string

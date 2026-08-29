@@ -2,6 +2,7 @@ const User = require('../models/user')
 const Job = require('../models/job')
 const Contract = require('../models/contract')
 const Transaction = require('../models/transaction')
+const getPagination = require("../utils/pagination")
 
 const index = async (req, res) => {
     try {
@@ -22,9 +23,21 @@ const index = async (req, res) => {
             filter.status = req.query.status
         }
         
+        const pagination = getPagination(req.query)
         const users = await User.find(filter)
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+
+        const total = await User.countDocuments(filter)
         
-        res.status(200).json(users)
+        res.status(200).json({
+            users: users,
+            page: pagination.page,
+            limit: pagination.limit,
+            total: total,
+            totalPages: Math.ceil(total / pagination.limit)
+        })
     } catch (error) {
         res.status(500).json({message: error.message})
     }
@@ -72,7 +85,7 @@ const updateStatus = async (req, res) => {
                 status: req.body.status
             },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         )
@@ -165,7 +178,7 @@ const verifyUser = async (req, res) => {
                 isVerified: true
             },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             })
             if (!verifiedUser) {

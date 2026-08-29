@@ -1,34 +1,25 @@
 const Review = require('../models/review')
 const Contract = require('../models/contract')
 const User = require('../models/user')
+const getPagination = require("../utils/pagination")
 
 
 const index = async(req,res)=>{
     try {
-        let page = Number(req.query.page)
-        let limit = Number(req.query.limit)
+        const pagination = getPagination(req.query)
+        const reviews = await Review.find({reviewee: req.params.id})
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
 
-        if (!page || page < 1) {
-            page = 1
-        }
-        if (!limit || limit < 1) {
-            limit = 10
-        }
-        const allReviews = await Review.find({reviewee: req.params.id}).sort({createdAt: -1})
-
-        const startIndex = (page - 1) * limit
-        const endIndex = startIndex + limit
-        const reviews = []
-
-        for (let i = startIndex; i < endIndex && i < allReviews.length; i++) {
-            reviews.push(allReviews[i])
-        }
+        const totalReviews = await Review.countDocuments({reviewee: req.params.id})
 
         res.status(200).json({
             reviews: reviews,
-            totalReviews: allReviews.length,
-            page: page,
-            limit: limit
+            totalReviews: totalReviews,
+            page: pagination.page,
+            limit: pagination.limit,
+            totalPages: Math.ceil(totalReviews / pagination.limit)
         })
     } catch (err) {
         res.status(500).json({message: err.message})

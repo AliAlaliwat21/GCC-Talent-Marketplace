@@ -1,4 +1,5 @@
 const Job = require('../models/job')
+const getPagination = require("../utils/pagination")
 
 const create = async (req, res)=>{
     try {
@@ -27,7 +28,8 @@ const create = async (req, res)=>{
             experienceLevel: req.body.experienceLevel,
             duration: req.body.duration,
             deadline: req.body.deadline,
-            attachments: req.body.attachments
+            attachments: req.body.attachments,
+            status: req.body.status || "draft"
         }
 
         const createdJob = await Job.create(jobData)
@@ -46,7 +48,12 @@ const showJob = async (req, res)=>{
             message: 'Job not found!'
         })
         if (singleJob.status !== 'open') {
-            return res.status(404).json({message: "Job not found!"})
+            const isOwner = req.user && singleJob.client._id.toString() === req.user._id.toString()
+            const isAdmin = req.user && req.user.role === "admin"
+
+            if (!isOwner && !isAdmin) {
+                return res.status(404).json({message: "Job not found!"})
+            }
         }
         const clientJobs = await Job.find({
     client: singleJob.client._id
@@ -157,19 +164,10 @@ const allJobs = async (req, res) =>{
             }
         }
         
-        let page = Number(req.query.page)
-        let limit = Number(req.query.limit)
-        
-        if (!page || page < 1) {
-            page = 1
-        }
-        if (!limit || limit < 1) {
-            limit = 10
-        }
-        if (limit > 50) {
-            limit = 50
-        }
-        const skip = (page - 1) * limit
+        const pagination = getPagination(req.query)
+        const page = pagination.page
+        const limit = pagination.limit
+        const skip = pagination.skip
 
         const jobs = await Job.find(jobFilter).sort(sortOption).skip(skip).limit(limit).populate("client","username avatarUrl ratingAvg ratingCount isVerified country city").populate('category').populate('skills')
 
@@ -211,7 +209,7 @@ const updateJob = async (req, res)=>{
             attachments: req.body.attachments
         }
 
-        const updatedJob = await Job.findByIdAndUpdate(req.params.jobId, jobData, {new: true, runValidators: true})
+        const updatedJob = await Job.findByIdAndUpdate(req.params.jobId, jobData, {returnDocument: "after", runValidators: true})
 
         res.status(200).json(updatedJob)
 
@@ -353,7 +351,15 @@ const myJobs = async (req, res) => {
             }
         }
 
-        const jobs = await Job.find(filter).populate("category").populate("skills")
+        const pagination = getPagination(req.query)
+
+        const jobs = await Job.find(filter)
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+            .populate("category")
+            .populate("skills")
+
+        const total = await Job.countDocuments(filter)
 
         res.status(200).json({
             jobs: jobs,
@@ -363,7 +369,11 @@ const myJobs = async (req, res) => {
                 inProgress: inProgressCount,
                 completed: completedCount,
                 closed: closedCount
-            }
+            },
+            page: pagination.page,
+            limit: pagination.limit,
+            total: total,
+            totalPages: Math.ceil(total / pagination.limit)
         })
     } catch (error) {
         res.status(500).json({

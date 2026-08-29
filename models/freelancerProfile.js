@@ -76,6 +76,9 @@ totalEarned: {
 },
 }, { timestamps: true })
 
+freelancerProfileSchema.index({skills: 1})
+freelancerProfileSchema.index({availability: 1, hourlyRate: 1})
+
 const FreelancerProfile = mongoose.model('FreelancerProfile', freelancerProfileSchema)
 
 module.exports = FreelancerProfile

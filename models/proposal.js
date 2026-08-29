@@ -52,6 +52,9 @@ proposalSchema.index(
     }
 )
 
+proposalSchema.index({freelancer: 1, status: 1, createdAt: -1})
+proposalSchema.index({job: 1, status: 1, createdAt: -1})
+
 const Proposal = mongoose.model('Proposal', proposalSchema)
 
 module.exports = Proposal

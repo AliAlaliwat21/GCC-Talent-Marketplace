@@ -8,7 +8,8 @@ const verifyToken = async (req, res, next) => {
         }
         
         const token = req.headers.authorization.split(' ')[1]
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const accessSecret = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET
+        const decoded = jwt.verify(token, accessSecret)
         const user = await User.findById(decoded.payload._id)
 
         if (!user) {
@@ -26,7 +27,7 @@ const verifyToken = async (req, res, next) => {
         }
         
         next()
-    } catch (error) {
+    } catch (_error) {
         res.status(401).json({message: "Invalid token"})
     }
 }
