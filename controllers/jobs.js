@@ -4,6 +4,17 @@ const create = async (req, res)=>{
     try {
         if (req.user.role !== 'client') return res.status(403).json({message: 'You do not have permission to perform this action.'})
 
+        if (
+            !req.body.title ||
+            !req.body.description ||
+            !req.body.category ||
+            !req.body.budgetType
+        ) {
+            return res.status(400).json({
+                message: 'Title, description, category and budget type are required'
+            })
+        }
+
         const jobData = {
             client: req.user._id,
             title: req.body.title,

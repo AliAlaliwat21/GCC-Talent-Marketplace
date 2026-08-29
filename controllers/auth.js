@@ -7,6 +7,17 @@ const User = require('../models/user')
 const signUp = async (req, res) => {
     try {
         if (
+            !req.body.username ||
+            !req.body.email ||
+            !req.body.password ||
+            !req.body.role
+            ) {
+            return res.status(400).json({
+                err: "Username, email, password and role are required"
+            })
+        }
+
+        if (
             req.body.role !== 'client' && req.body.role !== "freelancer") {
                 return res.status(400).json({err: "Role must be client or freelancer"})
             }
@@ -68,6 +79,12 @@ const signUp = async (req, res) => {
 
 const signIn = async (req, res) => {
     try {
+        if (!req.body.email || !req.body.password) {
+            return res.status(400).json({
+                err: "Email and password are required"
+            })
+        }
+
         // check if user in database already
         const userInDatabase = await User.findOne({
             email: req.body.email
@@ -82,6 +99,12 @@ const signIn = async (req, res) => {
 
         if (!validPassword) {
             return res.status(401).json({ err: 'Login failed. Please try again.' })
+        }
+
+        if (userInDatabase.status === 'suspended') {
+            return res.status(403).json({
+                err: 'Your account has been suspended'
+            })
         }
 
         const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
@@ -122,6 +145,12 @@ const refresh = async (req, res)=>{
         if (!user) return res.status(404).json({
             message: 'User not found.'
         })
+
+        if (user.status === 'suspended') {
+            return res.status(403).json({
+                message: 'Your account has been suspended'
+            })
+        }
 
         if (!user.refreshTokenHash) return res.status(401).json({
             message: 'Invalid refresh token.'
@@ -179,7 +208,7 @@ const logout = async (req, res)=>{
         res.clearCookie('refreshToken',
             {
                 httpOnly: true,
-                secure: process.env.NODE_END === 'production',
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax'
             }
         )
