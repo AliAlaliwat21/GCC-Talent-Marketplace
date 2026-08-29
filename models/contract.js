@@ -137,6 +137,30 @@ const contractSchema = new mongoose.Schema({
             default: Date.now
         }
     }],
+    messages: [{
+        sender: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        text: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        attachments: [{
+            url: {
+                type: String
+            },
+            name: {
+                type: String
+            }
+        }],
+        sentAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     startedAt: {
         type: Date,
         default: Date.now
@@ -145,6 +169,9 @@ const contractSchema = new mongoose.Schema({
         type: Date
     }
 }, {timestamps: true})
+
+contractSchema.index({client: 1, status: 1, createdAt: -1})
+contractSchema.index({freelancer: 1, status: 1, createdAt: -1})
 
 const Contract = mongoose.model('Contract', contractSchema)
 module.exports = Contract

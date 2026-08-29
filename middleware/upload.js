@@ -13,7 +13,10 @@ const fileFilter = (req,file,cb)=>{
     ]
 
     if(!allowedTypes.includes(file.mimetype)){
-        return cb(new Error("File type is not allowed"))
+        const error = new Error("File type is not allowed")
+        error.status = 400
+
+        return cb(error)
     }
 
     cb(null,true)

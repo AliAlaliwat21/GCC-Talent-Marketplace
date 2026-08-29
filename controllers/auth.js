@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt')
 
 const User = require('../models/user')
 
+const getAccessSecret = () => process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET
+const getRefreshSecret = () => process.env.JWT_REFRESH_SECRET || process.env.REFRESH_TOKEN_SECRET
+const getAccessExpiry = () => process.env.JWT_ACCESS_EXPIRES || "30m"
+const getRefreshExpiry = () => process.env.JWT_REFRESH_EXPIRES || "7d"
 
 const signUp = async (req, res) => {
     try {
@@ -13,13 +17,13 @@ const signUp = async (req, res) => {
             !req.body.role
             ) {
             return res.status(400).json({
-                err: "Username, email, password and role are required"
+                message: "Username, email, password and role are required"
             })
         }
 
         if (
             req.body.role !== 'client' && req.body.role !== "freelancer") {
-                return res.status(400).json({err: "Role must be client or freelancer"})
+                return res.status(400).json({message: "Role must be client or freelancer"})
             }
         // check if user in database already
         const userInDatabase = await User.findOne({
@@ -30,13 +34,13 @@ const signUp = async (req, res) => {
             email: req.body.email
         })
         if (userInDatabase) {
-            return res.status(409).json({ err:"Username already taken"})
+            return res.status(409).json({message: "Username already taken"})
         }
         if (existingEmail){
-            return res.status(409).json({err: "Email already in use"})
+            return res.status(409).json({message: "Email already in use"})
         }
         if (req.body.password.length < 8 ){
-            return res.status(400).json({err: "Password must be at least 8 characters"})
+            return res.status(400).json({message: "Password must be at least 8 characters"})
         }
 
         // creates user
@@ -55,9 +59,9 @@ const signUp = async (req, res) => {
         const payload = { username: user.username, _id: user._id, email: user.email, role: user.role }
 
         // create the token with payload + secret
-        const accessToken = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const accessToken = jwt.sign({payload}, getAccessSecret(), {expiresIn: getAccessExpiry()})
 
-        const refreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+        const refreshToken = jwt.sign({payload}, getRefreshSecret(), {expiresIn: getRefreshExpiry()})
         
         const refreshTokenHash = bcrypt.hashSync(refreshToken, 10)
 
@@ -73,7 +77,7 @@ const signUp = async (req, res) => {
 
         res.status(201).json({ accessToken })
     } catch(err) {
-        res.status(400).json({ err: err.message })
+        res.status(400).json({message: err.message})
     }
 }
 
@@ -81,7 +85,7 @@ const signIn = async (req, res) => {
     try {
         if (!req.body.email || !req.body.password) {
             return res.status(400).json({
-                err: "Email and password are required"
+                message: "Email and password are required"
             })
         }
 
@@ -91,27 +95,27 @@ const signIn = async (req, res) => {
         })
 
         if (!userInDatabase) {
-            return res.status(404).json({ err: 'User does not exist.' })
+            return res.status(404).json({message: 'User does not exist.'})
         }
 
         // check if the user's password is correct
         const validPassword = bcrypt.compareSync(req.body.password, userInDatabase.password)
 
         if (!validPassword) {
-            return res.status(401).json({ err: 'Login failed. Please try again.' })
+            return res.status(401).json({message: 'Login failed. Please try again.'})
         }
 
         if (userInDatabase.status === 'suspended') {
             return res.status(403).json({
-                err: 'Your account has been suspended'
+                message: 'Your account has been suspended'
             })
         }
 
         const payload = { username: userInDatabase.username, _id: userInDatabase._id, email: userInDatabase.email, role: userInDatabase.role}
 
-        const accessToken = jwt.sign({ payload }, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const accessToken = jwt.sign({ payload }, getAccessSecret(), {expiresIn: getAccessExpiry()})
 
-        const refreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+        const refreshToken = jwt.sign({payload}, getRefreshSecret(), {expiresIn: getRefreshExpiry()})
 
         const refreshTokenHash = bcrypt.hashSync(refreshToken, 10)
 
@@ -128,7 +132,7 @@ const signIn = async (req, res) => {
         res.status(200).json({ accessToken })
 
     } catch (err) {
-        res.status(500).json({ err: err.message })
+        res.status(500).json({message: err.message})
     }
 }
 
@@ -138,7 +142,7 @@ const refresh = async (req, res)=>{
 
         if (!refreshToken) return res.status(401).json({message: 'Refresh Token Required.'})
 
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const decoded = jwt.verify(refreshToken, getRefreshSecret())
 
         const user = await User.findById(decoded.payload._id)
 
@@ -164,9 +168,9 @@ const refresh = async (req, res)=>{
 
         const payload = { username: user.username, _id: user._id, email: user.email, role: user.role }
 
-        const newAccessToken = jwt.sign({payload}, process.env.JWT_SECRET, {expiresIn: '30m'})
+        const newAccessToken = jwt.sign({payload}, getAccessSecret(), {expiresIn: getAccessExpiry()})
 
-        const newRefreshToken = jwt.sign({payload}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+        const newRefreshToken = jwt.sign({payload}, getRefreshSecret(), {expiresIn: getRefreshExpiry()})
 
         const newRefreshTokenHash = bcrypt.hashSync(newRefreshToken, 10)
 
@@ -184,7 +188,7 @@ const refresh = async (req, res)=>{
             accessToken: newAccessToken
         })
     } catch (err) {
-        res.status(500).json({ err: err.message })
+        res.status(500).json({message: err.message})
     }
 }
 
@@ -194,7 +198,7 @@ const logout = async (req, res)=>{
 
         if (!refreshToken) return res.status(401).json({message: 'Refresh Token Required.'})
 
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const decoded = jwt.verify(refreshToken, getRefreshSecret())
 
         const user = await User.findById(decoded.payload._id)
 
@@ -215,7 +219,7 @@ const logout = async (req, res)=>{
 
         res.status(200).json({message: 'Logged Out Successfully.'})
     } catch (error) {
-        res.status(500).json({ err: error.message })
+        res.status(500).json({message: error.message})
     }
 }
 
@@ -229,6 +233,4 @@ module.exports = {
     refresh,
     logout
 }
-
-
 

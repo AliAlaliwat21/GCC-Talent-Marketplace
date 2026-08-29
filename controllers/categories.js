@@ -43,7 +43,7 @@ const update = async (req, res) => {
                 isFeatured: req.body.isFeatured
             },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         )

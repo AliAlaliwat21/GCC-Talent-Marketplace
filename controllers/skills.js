@@ -43,7 +43,7 @@ const update = async (req, res) => {
                 category: req.body.category
             },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         )

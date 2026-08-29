@@ -1,6 +1,8 @@
 const FreelancerProfile = require('../models/freelancerProfile')
 const User = require('../models/user')
 const Review = require('../models/review')
+const Gig = require("../models/gig")
+const getPagination = require("../utils/pagination")
 
 const index = async (req, res) => {
     try {
@@ -85,15 +87,9 @@ const index = async (req, res) => {
             }
         }
         
-        let page = Number(req.query.page)
-        let limit = Number(req.query.limit)
-        
-        if (isNaN(page) || page < 1) {
-            page = 1
-        }
-        if (isNaN(limit) || limit < 1) {
-            limit = 10
-        }
+        const pagination = getPagination(req.query)
+        const page = pagination.page
+        const limit = pagination.limit
 
         const start = (page - 1) * limit
         const paginatedProfiles = []
@@ -117,7 +113,7 @@ const show = async (req, res) => {
     try {
         const profile = await FreelancerProfile.findOne({
             user: req.params.userId
-        })
+        }).populate("skills", "name slug category")
         
         if (!profile) {
             return res.status(404).json({message: "Freelancer profile not found"})
@@ -129,7 +125,19 @@ const show = async (req, res) => {
             return res.status(404).json({message: "User not found"})
         }
 
+        const pagination = getPagination(req.query)
+
         const reviews = await Review.find({reviewee: user._id})
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+
+        const totalReviews = await Review.countDocuments({reviewee: user._id})
+
+        const activeGigs = await Gig.find({
+            freelancer: user._id,
+            status: "active"
+        }).sort({createdAt: -1})
         
         res.status(200).json({
             profile: profile,
@@ -139,9 +147,17 @@ const show = async (req, res) => {
                 country: user.country,
                 city: user.city,
                 ratingAvg: user.ratingAvg,
-                ratingCount: user.ratingCount
+                ratingCount: user.ratingCount,
+                isVerified: user.isVerified
             },
-            reviews: reviews
+            reviews: reviews,
+            activeGigs: activeGigs,
+            reviewPagination: {
+                page: pagination.page,
+                limit: pagination.limit,
+                total: totalReviews,
+                totalPages: Math.ceil(totalReviews / pagination.limit)
+            }
         })
     } catch (error) {
         res.status(500).json({message: error.message})
@@ -234,6 +250,53 @@ const update = async (req, res) => {
         res.status(200).json(profile)
     } catch (error) {
         res.status(500).json({message: error.message})
+    }
+}
+
+const upsertMe = async (req, res) => {
+    try {
+        if (req.user.role !== "freelancer") {
+            return res.status(403).json({message: "Only freelancers can manage freelancer profiles"})
+        }
+
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            return res.status(404).json({message: "User not found"})
+        }
+
+        if (req.body.country !== undefined) {
+            user.country = req.body.country
+        }
+
+        if (req.body.city !== undefined) {
+            user.city = req.body.city
+        }
+
+        await user.save()
+
+        let profile = await FreelancerProfile.findOne({user: req.user._id})
+        let status = 200
+
+        if (!profile) {
+            profile = new FreelancerProfile({
+                user: req.user._id
+            })
+            status = 201
+        }
+
+        profile.headline = req.body.headline
+        profile.bio = req.body.bio
+        profile.skills = req.body.skills
+        profile.hourlyRate = req.body.hourlyRate
+        profile.languages = req.body.languages
+        profile.availability = req.body.availability
+
+        await profile.save()
+
+        res.status(status).json(profile)
+    } catch (error) {
+        res.status(400).json({message: error.message})
     }
 }
 
@@ -360,6 +423,7 @@ module.exports = {
     show,
     create,
     update,
+    upsertMe,
     createPortfolioItem,
     updatePortfolioItem,
     deletePortfolioItem,

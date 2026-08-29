@@ -108,6 +108,10 @@ userSchema.set('toJSON', {
     transform: (document, returnedObject) => {
         delete returnedObject.password
         delete returnedObject.refreshTokenHash
+        delete returnedObject.verificationCode
+        delete returnedObject.verificationCodeExpire
+        delete returnedObject.verificationAttempts
+        delete returnedObject.verificationLockTime
     }
 })
 

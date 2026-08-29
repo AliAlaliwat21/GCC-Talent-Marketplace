@@ -2,6 +2,7 @@ const Proposal = require('../models/proposal')
 const Job = require('../models/job')
 const Contract = require('../models/contract')
 const FreelancerProfile = require('../models/freelancerProfile')
+const getPagination = require("../utils/pagination")
 
 
 
@@ -86,11 +87,24 @@ const create = async(req,res)=>{
 
  const freelancerProposals = async(req,res)=>{
     try {
+        const pagination = getPagination(req.query)
         const proposals = await Proposal.find({
             freelancer:req.user._id
-        }).populate('job')
+        })
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+            .populate('job')
 
-        res.status(200).json(proposals)
+        const total = await Proposal.countDocuments({freelancer: req.user._id})
+
+        res.status(200).json({
+            proposals: proposals,
+            page: pagination.page,
+            limit: pagination.limit,
+            total: total,
+            totalPages: Math.ceil(total / pagination.limit)
+        })
     } catch (error) {
         res.status(500).json({
             message: error.message
@@ -108,7 +122,14 @@ const create = async(req,res)=>{
         if (job.client.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot view proposals for this job"})
         }
-        const proposals = await Proposal.find({job: job._id}).populate("freelancer", "username avatarUrl ratingAvg ratingCount")
+        const pagination = getPagination(req.query)
+        const proposals = await Proposal.find({job: job._id})
+            .sort({createdAt: -1})
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+            .populate("freelancer", "username avatarUrl ratingAvg ratingCount")
+
+        const total = await Proposal.countDocuments({job: job._id})
         const proposalsWithProfiles = []
 
         for (let i = 0; i < proposals.length; i++) {
@@ -120,7 +141,13 @@ const create = async(req,res)=>{
             })
         }
         
-        res.status(200).json(proposalsWithProfiles)
+        res.status(200).json({
+            proposals: proposalsWithProfiles,
+            page: pagination.page,
+            limit: pagination.limit,
+            total: total,
+            totalPages: Math.ceil(total / pagination.limit)
+        })
     } catch (error) {
         res.status(500).json({message: error.message})
     }

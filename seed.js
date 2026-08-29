@@ -15,6 +15,7 @@ const Proposal = require("./models/proposal")
 const Contract = require("./models/contract")
 const Review = require("./models/review")
 const Transaction = require("./models/transaction")
+const Gig = require("./models/gig")
 
 
 const seedDatabase = async () => {
@@ -25,6 +26,7 @@ const seedDatabase = async () => {
 
         await Review.deleteMany()
         await Transaction.deleteMany()
+        await Gig.deleteMany()
         await Contract.deleteMany()
         await Proposal.deleteMany()
         await Job.deleteMany()
@@ -55,6 +57,41 @@ const seedDatabase = async () => {
             slug: 'writing-translation',
             icon: 'writing',
             isFeatured: true
+        })
+
+        const mobileDevelopment = await Category.create({
+            name: "Mobile Development",
+            slug: "mobile-development",
+            icon: "mobile",
+            isFeatured: true
+        })
+
+        const digitalMarketing = await Category.create({
+            name: "Digital Marketing",
+            slug: "digital-marketing",
+            icon: "marketing",
+            isFeatured: true
+        })
+
+        const videoAnimation = await Category.create({
+            name: "Video and Animation",
+            slug: "video-animation",
+            icon: "video",
+            isFeatured: false
+        })
+
+        const dataAnalytics = await Category.create({
+            name: "Data and Analytics",
+            slug: "data-analytics",
+            icon: "data",
+            isFeatured: false
+        })
+
+        const businessSupport = await Category.create({
+            name: "Business Support",
+            slug: "business-support",
+            icon: "business",
+            isFeatured: false
         })
         
         const skills = await Skill.insertMany([
@@ -93,6 +130,171 @@ const seedDatabase = async () => {
                 name: 'Arabic Translation',
                 slug: 'arabic-translation',
                 category: writingTranslation._id
+            },
+            {
+                name: "Node.js",
+                slug: "nodejs",
+                category: webDevelopment._id
+            },
+            {
+                name: "React",
+                slug: "react",
+                category: webDevelopment._id
+            },
+            {
+                name: "Illustration",
+                slug: "illustration",
+                category: graphicDesign._id
+            },
+            {
+                name: "UI Design",
+                slug: "ui-design",
+                category: graphicDesign._id
+            },
+            {
+                name: "Brand Design",
+                slug: "brand-design",
+                category: graphicDesign._id
+            },
+            {
+                name: "Copywriting",
+                slug: "copywriting",
+                category: writingTranslation._id
+            },
+            {
+                name: "English Translation",
+                slug: "english-translation",
+                category: writingTranslation._id
+            },
+            {
+                name: "Technical Writing",
+                slug: "technical-writing",
+                category: writingTranslation._id
+            },
+            {
+                name: "React Native",
+                slug: "react-native",
+                category: mobileDevelopment._id
+            },
+            {
+                name: "Flutter",
+                slug: "flutter",
+                category: mobileDevelopment._id
+            },
+            {
+                name: "Android Development",
+                slug: "android-development",
+                category: mobileDevelopment._id
+            },
+            {
+                name: "iOS Development",
+                slug: "ios-development",
+                category: mobileDevelopment._id
+            },
+            {
+                name: "Mobile UI Design",
+                slug: "mobile-ui-design",
+                category: mobileDevelopment._id
+            },
+            {
+                name: "SEO",
+                slug: "seo",
+                category: digitalMarketing._id
+            },
+            {
+                name: "Social Media Marketing",
+                slug: "social-media-marketing",
+                category: digitalMarketing._id
+            },
+            {
+                name: "Content Marketing",
+                slug: "content-marketing",
+                category: digitalMarketing._id
+            },
+            {
+                name: "Email Marketing",
+                slug: "email-marketing",
+                category: digitalMarketing._id
+            },
+            {
+                name: "Campaign Management",
+                slug: "campaign-management",
+                category: digitalMarketing._id
+            },
+            {
+                name: "Video Editing",
+                slug: "video-editing",
+                category: videoAnimation._id
+            },
+            {
+                name: "Motion Graphics",
+                slug: "motion-graphics",
+                category: videoAnimation._id
+            },
+            {
+                name: "2D Animation",
+                slug: "2d-animation",
+                category: videoAnimation._id
+            },
+            {
+                name: "Intro Animation",
+                slug: "intro-animation",
+                category: videoAnimation._id
+            },
+            {
+                name: "Video Production",
+                slug: "video-production",
+                category: videoAnimation._id
+            },
+            {
+                name: "Data Analysis",
+                slug: "data-analysis",
+                category: dataAnalytics._id
+            },
+            {
+                name: "Excel",
+                slug: "excel",
+                category: dataAnalytics._id
+            },
+            {
+                name: "Power BI",
+                slug: "power-bi",
+                category: dataAnalytics._id
+            },
+            {
+                name: "SQL",
+                slug: "sql",
+                category: dataAnalytics._id
+            },
+            {
+                name: "Data Visualization",
+                slug: "data-visualization",
+                category: dataAnalytics._id
+            },
+            {
+                name: "Virtual Assistance",
+                slug: "virtual-assistance",
+                category: businessSupport._id
+            },
+            {
+                name: "Market Research",
+                slug: "market-research",
+                category: businessSupport._id
+            },
+            {
+                name: "Project Coordination",
+                slug: "project-coordination",
+                category: businessSupport._id
+            },
+            {
+                name: "Customer Support",
+                slug: "customer-support",
+                category: businessSupport._id
+            },
+            {
+                name: "Data Entry",
+                slug: "data-entry",
+                category: businessSupport._id
             }
         ])
 
@@ -102,7 +304,7 @@ const seedDatabase = async () => {
 
         const admin = await User.create({
             username: 'admin',
-            email: 'admin@gcctalent.com',
+            email: 'admin@gcctalent.test',
             password: adminPassword,
             role: 'admin',
             status: 'active',
@@ -113,7 +315,7 @@ const seedDatabase = async () => {
 
         console.log(`Admin created: ${admin.email}`)
 
-        const clientPassword = bcrypt.hashSync('Player123!', 10)
+        const clientPassword = bcrypt.hashSync('Password123!', 10)
 
         const clientData = [
             {
@@ -235,7 +437,7 @@ const seedDatabase = async () => {
             clients.push(client)
         }
         
-        const freelancerPassword = bcrypt.hashSync("Freelancer123!", 10)
+        const freelancerPassword = bcrypt.hashSync("Password123!", 10)
         
         const freelancerData = [
             {
@@ -463,6 +665,53 @@ const seedDatabase = async () => {
 
         console.log(`${freelancers.length} freelancers created`)
         console.log(`${clients.length} clients created`)
+
+        const gigTitles = [
+            "Gaming community website setup",
+            "Responsive tournament landing page",
+            "Fantasy game logo design",
+            "Gaming event poster design",
+            "Arabic gaming content translation",
+            "Short fantasy story writing",
+            "Arcade website redesign",
+            "Streamer brand logo",
+            "Esports event poster",
+            "Game article writing",
+            "Manga website translation",
+            "Gaming shop landing page",
+            "Community banner design",
+            "Tournament registration page",
+            "Fantasy character poster"
+        ]
+
+        const gigs = []
+
+        for (let i = 0; i < gigTitles.length; i++) {
+            let gigCategory = webDevelopment
+
+            if (i % 3 === 1) {
+                gigCategory = graphicDesign
+            }
+
+            if (i % 3 === 2) {
+                gigCategory = writingTranslation
+            }
+
+            const gig = await Gig.create({
+                freelancer: freelancers[i]._id,
+                title: gigTitles[i],
+                description: `I will complete ${gigTitles[i].toLowerCase()} with clear communication and on-time delivery.`,
+                category: gigCategory._id,
+                tags: ["gaming", "gcc", "creative"],
+                price: 50 + (i * 10),
+                deliveryDays: 3 + (i % 7),
+                status: "active"
+            })
+
+            gigs.push(gig)
+        }
+
+        console.log(`${gigs.length} gigs created`)
         
         
         const jobDeadline = new Date()
@@ -640,6 +889,79 @@ const seedDatabase = async () => {
                 status: "completed"
             }
         ])
+
+        const extraJobTitles = [
+            "Build a mobile companion page for a game",
+            "Create social media posts for an esports event",
+            "Edit a gaming tournament highlights video",
+            "Prepare a dashboard for tournament results",
+            "Coordinate registrations for a gaming convention",
+            "Build a clan recruitment website",
+            "Design a retro arcade logo",
+            "Write a fantasy quest introduction",
+            "Create a mobile game promotional page",
+            "Plan a social media campaign for a new game",
+            "Animate an intro for a gaming channel",
+            "Analyze player survey results",
+            "Provide customer support for an online tournament",
+            "Create a leaderboard website",
+            "Design a poster for a manga convention",
+            "Translate fantasy character descriptions",
+            "Build a simple gaming news website",
+            "Create branding for an esports team",
+            "Write articles about classic games",
+            "Prepare an event registration spreadsheet"
+        ]
+
+        const seedCategories = [
+            mobileDevelopment,
+            digitalMarketing,
+            videoAnimation,
+            dataAnalytics,
+            businessSupport,
+            webDevelopment,
+            graphicDesign,
+            writingTranslation
+        ]
+
+        for (let i = 0; i < extraJobTitles.length; i++) {
+            const category = seedCategories[i % seedCategories.length]
+            const relatedSkills = []
+
+            for (let j = 0; j < skills.length; j++) {
+                if (skills[j].category.toString() === category._id.toString() && relatedSkills.length < 3) {
+                    relatedSkills.push(skills[j]._id)
+                }
+            }
+
+            let status = "open"
+
+            if (i % 6 === 4) {
+                status = "draft"
+            }
+
+            if (i % 6 === 5) {
+                status = "closed"
+            }
+
+            const extraJob = await Job.create({
+                client: clients[i % clients.length]._id,
+                title: extraJobTitles[i],
+                description: `${extraJobTitles[i]} for a GCC gaming or creative community with clear deliverables.`,
+                category: category._id,
+                skills: relatedSkills,
+                budgetType: i % 4 === 0 ? "hourly" : "fixed",
+                budgetMin: 200 + (i * 25),
+                budgetMax: 500 + (i * 40),
+                experienceLevel: i % 3 === 0 ? "entry" : "intermediate",
+                duration: "Three weeks",
+                deadline: jobDeadline,
+                status: status
+            })
+
+            jobs.push(extraJob)
+        }
+
         console.log(`${jobs.length} jobs created`)
         
         const proposals = []
@@ -688,6 +1010,42 @@ const seedDatabase = async () => {
 
         proposals.push(completedProposal)
 
+        const proposalPairs = new Set()
+
+        for (let i = 0; i < proposals.length; i++) {
+            proposalPairs.add(`${proposals[i].job}-${proposals[i].freelancer}`)
+        }
+
+        let proposalAttempt = 0
+
+        while (proposals.length < 60 && proposalAttempt < 600) {
+            const job = jobs[(proposalAttempt + 2) % jobs.length]
+            const freelancer = freelancers[(proposalAttempt + 3) % freelancers.length]
+            const pair = `${job._id}-${freelancer._id}`
+
+            if (!proposalPairs.has(pair)) {
+                let status = "declined"
+
+                if (job.status === "open") {
+                    status = proposalAttempt % 4 === 0 ? "shortlisted" : "pending"
+                }
+
+                const proposal = await Proposal.create({
+                    job: job._id,
+                    freelancer: freelancer._id,
+                    coverLetter: `I can complete ${job.title.toLowerCase()} and provide regular progress updates.`,
+                    amount: job.budgetMin || 300,
+                    deliveryDays: 7 + (proposalAttempt % 20),
+                    status: status
+                })
+
+                proposals.push(proposal)
+                proposalPairs.add(pair)
+            }
+
+            proposalAttempt = proposalAttempt + 1
+        }
+
         jobs[0].proposalsCount = 1
         jobs[1].proposalsCount = 1
         jobs[8].proposalsCount = 1
@@ -697,6 +1055,19 @@ const seedDatabase = async () => {
         await jobs[1].save()
         await jobs[8].save()
         await jobs[9].save()
+
+        for (let i = 0; i < jobs.length; i++) {
+            let proposalCount = 0
+
+            for (let j = 0; j < proposals.length; j++) {
+                if (proposals[j].job.toString() === jobs[i]._id.toString()) {
+                    proposalCount = proposalCount + 1
+                }
+            }
+
+            jobs[i].proposalsCount = proposalCount
+            await jobs[i].save()
+        }
         
         console.log(`${proposals.length} proposals created`)
         
@@ -760,6 +1131,78 @@ const seedDatabase = async () => {
             completedContract
         ]
 
+        const extraContracts = []
+
+        for (let i = 10; i < 19; i++) {
+            let contractProposal
+
+            for (let j = 0; j < proposals.length; j++) {
+                if (proposals[j].job.toString() === jobs[i]._id.toString()) {
+                    contractProposal = proposals[j]
+                    break
+                }
+            }
+
+            if (!contractProposal) {
+                contractProposal = await Proposal.create({
+                    job: jobs[i]._id,
+                    freelancer: freelancers[i % freelancers.length]._id,
+                    coverLetter: `I can complete ${jobs[i].title.toLowerCase()} within the agreed schedule.`,
+                    amount: jobs[i].budgetMin || 300,
+                    deliveryDays: 14,
+                    status: "accepted"
+                })
+
+                proposals.push(contractProposal)
+            }
+
+            contractProposal.status = "accepted"
+            await contractProposal.save()
+
+            jobs[i].status = "completed"
+            await jobs[i].save()
+
+            const extraContract = await Contract.create({
+                client: jobs[i].client,
+                freelancer: contractProposal.freelancer,
+                source: {
+                    type: "job",
+                    job: jobs[i]._id,
+                    proposal: contractProposal._id
+                },
+                title: jobs[i].title,
+                totalAmount: contractProposal.amount,
+                currency: "USD",
+                status: "completed",
+                milestones: [
+                    {
+                        title: "Complete the agreed work",
+                        description: jobs[i].description,
+                        amount: contractProposal.amount,
+                        status: "approved",
+                        approvedAt: new Date()
+                    }
+                ],
+                activity: [
+                    {
+                        type: "contract_completed",
+                        by: jobs[i].client,
+                        message: "Contract completed successfully"
+                    }
+                ],
+                messages: [
+                    {
+                        sender: jobs[i].client,
+                        text: "Thank you. The requirements and deadline are confirmed."
+                    }
+                ],
+                completedAt: new Date()
+            })
+
+            contracts.push(extraContract)
+            extraContracts.push(extraContract)
+        }
+
         console.log(`${contracts.length} contracts created`)
         
         const clientReview = await Review.create({
@@ -791,6 +1234,52 @@ const seedDatabase = async () => {
             clientReview,
             freelancerReview
         ]
+
+        for (let i = 0; i < extraContracts.length; i++) {
+            const clientSeedReview = await Review.create({
+                contract: extraContracts[i]._id,
+                reviewer: extraContracts[i].client,
+                reviewee: extraContracts[i].freelancer,
+                rating: 4 + (i % 2),
+                comment: "The freelancer delivered the agreed work and communicated clearly."
+            })
+
+            const freelancerSeedReview = await Review.create({
+                contract: extraContracts[i]._id,
+                reviewer: extraContracts[i].freelancer,
+                reviewee: extraContracts[i].client,
+                rating: 4 + ((i + 1) % 2),
+                comment: "The client shared clear requirements and responded on time."
+            })
+
+            reviews.push(clientSeedReview)
+            reviews.push(freelancerSeedReview)
+        }
+
+        const reviewedUserIds = []
+
+        for (let i = 0; i < reviews.length; i++) {
+            const revieweeId = reviews[i].reviewee.toString()
+
+            if (!reviewedUserIds.includes(revieweeId)) {
+                reviewedUserIds.push(revieweeId)
+            }
+        }
+
+        for (let i = 0; i < reviewedUserIds.length; i++) {
+            const userReviews = await Review.find({reviewee: reviewedUserIds[i]})
+            let totalRating = 0
+
+            for (let j = 0; j < userReviews.length; j++) {
+                totalRating = totalRating + userReviews[j].rating
+            }
+
+            await User.findByIdAndUpdate(reviewedUserIds[i], {
+                ratingAvg: totalRating / userReviews.length,
+                ratingCount: userReviews.length
+            })
+        }
+
         console.log(`${reviews.length} reviews created`)
 
     } catch (error) {
@@ -800,4 +1289,8 @@ const seedDatabase = async () => {
     }
 }
 
-seedDatabase()
+if (require.main === module) {
+    seedDatabase()
+}
+
+module.exports = seedDatabase
