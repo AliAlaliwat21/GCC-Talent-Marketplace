@@ -4,6 +4,8 @@ const mongoose = require('mongoose')
 
 const Category = require('./models/category')
 const Skill = require('./models/skill')
+const bcrypt = require('bcrypt')
+const User = require('./models/user')
 
 const seedDatabase = async () => {
     try {
@@ -72,8 +74,23 @@ const seedDatabase = async () => {
                 category: writingTranslation._id
             }
         ])
-
+        
+        const hashedPassword = bcrypt.hashSync('Admin123!', 10)
+        
+        const admin = await User.create({
+            username: 'admin',
+            email: 'admin@gcctalent.com',
+            password: hashedPassword,
+            role: 'admin',
+            status: 'active',
+            isVerified: true,
+            country: 'Bahrain',
+            city: 'Manama'
+        })
+        
+        console.log(`Admin created: ${admin.email}`)
         console.log("Categories and skills created")
+    
     } catch (error) {
         console.log(error.message)
     } finally {
