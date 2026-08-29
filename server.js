@@ -7,6 +7,9 @@ const morgan = require('morgan')
 const dns = require('node:dns')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
+const mongoSanitize = require('express-mongo-sanitize')
 
 const PORT = process.env.PORT ? process.env.PORT : '3000'
 
@@ -37,25 +40,39 @@ mongoose.connect(process.env.MONGODB_URI)
 mongoose.connection.on('connected', () => {
     console.log(`Connected to MongoDB ${mongoose.connection.name}. 🥭`)
 })
-app.use(cors())
+
+app.use(cors({
+  origin: 'https://localhost:5173',
+  credentials: true
+}))
 app.use(express.json())
 app.use(morgan('dev'))
 app.use(cookieParser())
+app.use(helmet())
+app.use(mongoSanitize())
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: {
+        message: 'Too many authentication attempts. Please try again later.'
+    }
+})
 
 // auth routes
 
 app.post(
-    '/api/v1/auth/register',
+    '/api/v1/auth/register', authLimiter,
     authCtrl.signUp
 )
 
 app.post(
-    '/api/v1/auth/login',
+    '/api/v1/auth/login', authLimiter,
     authCtrl.signIn
 )
 
 app.post(
-    '/api/v1/auth/refresh',
+    '/api/v1/auth/refresh', authLimiter,
     authCtrl.refresh
 )
 
