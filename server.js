@@ -25,7 +25,8 @@ const reviewsCtrl = require('./controllers/reviews')
 const skillsCtrl = require('./controllers/skills')
 const categoriesCtrl = require('./controllers/categories')
 const uploadsCtrl = require('./controllers/uploads')
-
+const walletCtrl = require('./controllers/wallet')
+const adminCtrl = require('./controllers/admin')
 
 const verifyToken = require('./middleware/verify-token')
 const upload = multer({
@@ -49,7 +50,7 @@ app.post(
 )
 
 app.post(
-    '/api/v1/auth/sign-in',
+    '/api/v1/auth/login',
     authCtrl.signIn
 )
 
@@ -103,7 +104,7 @@ app.get(
 
 // get freelancer by ID
 app.get(
-    '/api/v1/freelancers/:id',
+    '/api/v1/freelancers/:userId',
     freelancerProfilesCtrl.show
 )
 
@@ -204,7 +205,7 @@ app.post(
 
 // get logged-in user's jobs
 app.get(
-    '/api/v1/jobs/my',
+    '/api/v1/jobs/mine',
     verifyToken,
     jobsCtrl.myJobs
 )
@@ -260,14 +261,14 @@ app.delete(
 
 // create proposal for a job
 app.post(
-    '/api/v1/jobs/:jobId/proposals',
+    '/api/v1/jobs/:id/proposals',
     verifyToken,
     proposalsCtrl.create
 )
 
 // get proposals for a specific job
 app.get(
-    '/api/v1/jobs/:jobId/proposals',
+    '/api/v1/jobs/:id/proposals',
     verifyToken,
     proposalsCtrl.jobProposals
 )
@@ -281,35 +282,35 @@ app.get(
 
 // update proposal
 app.patch(
-    '/api/v1/proposals/:proposalId',
+    '/api/v1/proposals/:id',
     verifyToken,
     proposalsCtrl.update
 )
 
 // withdraw proposal
 app.patch(
-    '/api/v1/proposals/:proposalId/withdraw',
+    '/api/v1/proposals/:id/withdraw',
     verifyToken,
     proposalsCtrl.withdraw
 )
 
 // shortlist proposal
 app.patch(
-    '/api/v1/proposals/:proposalId/shortlist',
+    '/api/v1/proposals/:id/shortlist',
     verifyToken,
     proposalsCtrl.shortlist
 )
 
 // decline proposal
 app.patch(
-    '/api/v1/proposals/:proposalId/decline',
+    '/api/v1/proposals/:id/decline',
     verifyToken,
     proposalsCtrl.decline
 )
 
 // accept proposal
 app.patch(
-    '/api/v1/proposals/:proposalId/accept',
+    '/api/v1/proposals/:id/accept',
     verifyToken,
     proposalsCtrl.accept
 )
@@ -325,56 +326,56 @@ app.get(
 
 // get one contract
 app.get(
-    '/api/v1/contracts/:contractId',
+    '/api/v1/contracts/:id',
     verifyToken,
     contractsCtrl.show
 )
 
 // add milestone
 app.post(
-    '/api/v1/contracts/:contractId/milestones',
+    '/api/v1/contracts/:id/milestones',
     verifyToken,
     contractsCtrl.addMilestone
 )
 
 // update milestone
 app.patch(
-    '/api/v1/contracts/:contractId/milestones/:milestoneId',
+    '/api/v1/contracts/:id/milestones/:mid',
     verifyToken,
     contractsCtrl.updateMilestone
 )
 
 // fund milestone
 app.patch(
-    '/api/v1/contracts/:contractId/milestones/:milestoneId/fund',
+    '/api/v1/contracts/:id/milestones/:mid/fund',
     verifyToken,
     contractsCtrl.fundMilestone
 )
 
 // deliver milestone
 app.patch(
-    '/api/v1/contracts/:contractId/milestones/:milestoneId/deliver',
+    '/api/v1/contracts/:id/milestones/:mid/deliver',
     verifyToken,
     contractsCtrl.deliverMilestone
 )
 
 // approve milestone
 app.patch(
-    '/api/v1/contracts/:contractId/milestones/:milestoneId/approve',
+    '/api/v1/contracts/:id/milestones/:mid/approve',
     verifyToken,
     contractsCtrl.approveMilestone
 )
 
 // request revision
 app.patch(
-    '/api/v1/contracts/:contractId/milestones/:milestoneId/revision',
+    '/api/v1/contracts/:id/milestones/:mid/revision',
     verifyToken,
     contractsCtrl.requestRevision
 )
 
 // cancel contract
 app.patch(
-    '/api/v1/contracts/:contractId/cancel',
+    '/api/v1/contracts/:id/cancel',
     verifyToken,
     contractsCtrl.cancelContract
 )
@@ -453,6 +454,22 @@ app.delete(
     categoriesCtrl.deleteCategory
 )
 
+// wallet routes
+
+// get logged-in user's wallet and transactions
+app.get(
+    '/api/v1/wallet',
+    verifyToken,
+    walletCtrl.index
+)
+
+// add funds to wallet
+app.post(
+    '/api/v1/wallet/deposit',
+    verifyToken,
+    walletCtrl.deposit
+)
+
 
 // Upload image/file
 app.post(
@@ -460,6 +477,50 @@ app.post(
     verifyToken,
     upload.single('file'),
     uploadsCtrl.upload
+)
+
+// ADMIN ROUTES
+
+// platform statistics / dashboard
+app.get(
+    '/api/v1/admin/stats',
+    verifyToken,
+    adminCtrl.stats
+)
+
+// search / list users
+app.get(
+    '/api/v1/admin/users',
+    verifyToken,
+    adminCtrl.index
+)
+
+// view one user with contracts and transactions
+app.get(
+    '/api/v1/admin/users/:id',
+    verifyToken,
+    adminCtrl.show
+)
+
+// change user status: active / suspended
+app.patch(
+    '/api/v1/admin/users/:id/status',
+    verifyToken,
+    adminCtrl.updateStatus
+)
+
+// verify user
+app.patch(
+    '/api/v1/admin/users/:id/verify',
+    verifyToken,
+    adminCtrl.verifyUser
+)
+
+// delete user
+app.delete(
+    '/api/v1/admin/users/:id',
+    verifyToken,
+    adminCtrl.deleteUser
 )
 
 // server
