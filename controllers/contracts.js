@@ -48,10 +48,18 @@ const addMilestone = async (req, res) => {
         if (contract.status !== 'active') {
             return res.status(400).json({message: "Milestones can only be added to active contracts"})
         }
+        
+        const milestoneAmount = Number(req.body.amount)
+
+        if (!milestoneAmount || milestoneAmount <= 0) {
+            return res.status(400).json({message: "Milestone amount must be greater than zero"})
+        }
+        contract.totalAmount = contract.totalAmount + milestoneAmount
+
         contract.milestones.push({
             title: req.body.title,
             description: req.body.description,
-            amount: req.body.amount,
+            amount: milestoneAmount,
             dueDate: req.body.dueDate
         })
 
@@ -98,9 +106,14 @@ const updateMilestone = async (req, res) => {
         if (req.body.description !== undefined) {
             milestone.description = req.body.description
         }
-
         if (req.body.amount !== undefined) {
-            milestone.amount = req.body.amount
+            const newAmount = Number(req.body.amount)
+            
+            if (!newAmount || newAmount <= 0) {
+                return res.status(400).json({message: "Milestone amount must be greater than zero"})
+            }
+            contract.totalAmount = contract.totalAmount - milestone.amount + newAmount
+            milestone.amount = newAmount
         }
 
         if (req.body.dueDate !== undefined) {
