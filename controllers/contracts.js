@@ -152,13 +152,22 @@ const fundMilestone = async (req, res) => {
         session.startTransaction()
         
         const contract = await Contract.findById(req.params.id).session(session)
+
         if (!contract) {
             await session.abortTransaction()
             return res.status(404).json({message: "Contract not found"})
         }
+
         if (contract.client.toString() !== req.user._id.toString()) {
             await session.abortTransaction()
             return res.status(403).json({message: "You cannot fund this milestone"})
+        }
+
+        if (contract.status !== 'active'){
+            await session.abortTransaction()
+            return res.status(422).json({
+                message: 'Milestones can only be funded on active contracts'
+            })
         }
 
         const milestone = contract.milestones.id(req.params.mid)
