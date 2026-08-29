@@ -34,6 +34,9 @@ const showJob = async (req, res)=>{
         if (!singleJob) return res.status(404).json({
             message: 'Job not found!'
         })
+        if (singleJob.status !== 'open') {
+            return res.status(404).json({message: "Job not found!"})
+        }
 
         res.status(200).json(singleJob)
 
