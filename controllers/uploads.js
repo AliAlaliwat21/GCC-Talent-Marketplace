@@ -7,12 +7,36 @@ const upload = async(req,res)=>{
                 message: 'No file uploaded'
             })
         }
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'application/pdf',
+            'application/zip'
+        ]
+        
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({
+            message: 'Only JPG, PNG, WEBP, PDF and ZIP files are allowed'
+            })
+        }
+
         if(
             req.file.mimetype.startsWith('image/')&&
             req.file.size > 5 * 1024 * 1024
         ){
             return res.status(400).json({
                 message: 'Images must be 5 MB or smaller'
+            })
+        }
+
+        if (
+            !req.file.mimetype.startsWith('image/') &&
+            req.file.size > 20 * 1024 * 1024
+        ) {
+            return res.status(400).json({
+            message: 'Documents must be 20 MB or smaller'
             })
         }
 

@@ -81,11 +81,25 @@ const create = async(req,res)=>{
         return res.status(404).json({message: "Reviewed user not found"})
 }
 
+    if (req.body.rating === undefined) {
+    return res.status(400).json({
+        message: 'Rating is required'
+    })
+}
+
+    const rating = Number(req.body.rating)
+
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+        return res.status(400).json({
+            message: 'Rating must be between 1 and 5'
+        })
+    }
+
     const review = await Review.create({
             contract: contract._id,
             reviewer: req.user._id,
             reviewee: reviewee,
-            rating: req.body.rating,
+            rating: rating,
             comment: req.body.comment
     })
     
