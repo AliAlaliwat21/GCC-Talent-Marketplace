@@ -115,7 +115,9 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
     try {
-        const profile = await FreelancerProfile.findById(req.params.id)
+        const profile = await FreelancerProfile.findOne({
+            user: req.params.userId
+        })
         
         if (!profile) {
             return res.status(404).json({message: "Freelancer profile not found"})

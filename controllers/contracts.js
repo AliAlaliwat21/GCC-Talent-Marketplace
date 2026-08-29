@@ -41,9 +41,72 @@ const show = async (req, res) => {
             contract.freelancer.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot view this contract"})
         }
-        res.status(200).json(contract)
+
+        const transactions = await Transaction.find({
+            contract: contract._id,
+            status: "completed"
+        })
+
+
+        let released = 0
+        let refunded = 0
+        let platformFees = 0
+
+        for (let i = 0; i < transactions.length; i++) {
+
+            if (transactions[i].type === "escrow_release") {
+                released = released + transactions[i].amount
+            }
+
+            if (transactions[i].type === "escrow_refund") {
+                refunded = refunded + transactions[i].amount
+            }
+
+            if (transactions[i].type === "platform_fee") {
+                platformFees = platformFees + transactions[i].amount
+            }
+        }
+
+
+        let inEscrow = 0
+        let remainingUnfunded = 0
+
+        for (let i = 0; i < contract.milestones.length; i++) {
+
+            inEscrow =
+                inEscrow + contract.milestones[i].escrowAmount
+
+            if (contract.milestones[i].status === "pending") {
+                remainingUnfunded =
+                    remainingUnfunded + contract.milestones[i].amount
+            }
+        }
+
+
+        const freelancerReceived = released - platformFees
+
+
+        const moneySummary = {
+            totalAmount: contract.totalAmount,
+            inEscrow: inEscrow,
+            released: released,
+            platformFees: platformFees,
+            freelancerReceived: freelancerReceived,
+            refunded: refunded,
+            remainingUnfunded: remainingUnfunded,
+            currency: contract.currency
+        }
+
+
+        res.status(200).json({
+            contract: contract,
+            moneySummary: moneySummary
+        })
+
     } catch (error) {
-        res.status(500).json({message: error.message})
+        res.status(500).json({
+            message: error.message
+        })
     }
 }
 

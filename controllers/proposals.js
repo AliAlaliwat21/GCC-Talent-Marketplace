@@ -42,6 +42,30 @@ const create = async(req,res)=>{
             })
         }
         
+        if (
+            !req.body.coverLetter ||
+            req.body.amount === undefined ||
+            req.body.deliveryDays === undefined
+        ) {
+            return res.status(400).json({
+                message: 'Cover letter, amount and delivery days are required'
+            })
+        }
+
+        const amount = Number(req.body.amount)
+        const deliveryDays = Number(req.body.deliveryDays)
+
+        if (isNaN(amount) || amount <= 0) {
+            return res.status(400).json({
+                message: 'Proposal amount must be greater than zero'
+            })
+        }
+
+        if (isNaN(deliveryDays) || deliveryDays <= 0) {
+            return res.status(400).json({
+                message: 'Delivery days must be greater than zero'
+            })
+        }
         const proposal = await Proposal.create({
             job: job._id,
             freelancer: req.user._id,
