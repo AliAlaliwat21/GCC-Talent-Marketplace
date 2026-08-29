@@ -37,8 +37,30 @@ const showJob = async (req, res)=>{
         if (singleJob.status !== 'open') {
             return res.status(404).json({message: "Job not found!"})
         }
+        const clientJobs = await Job.find({
+    client: singleJob.client._id
+})
 
-        res.status(200).json(singleJob)
+    let clientJobsPosted = 0
+    for (let i = 0; i < clientJobs.length; i++) {
+        if (clientJobs[i].status !== 'draft') {
+            clientJobsPosted = clientJobsPosted + 1
+        }
+    }
+    const sameCategoryJobs = await Job.find({category: singleJob.category._id,status: "open"}).populate("client", "username avatarUrl ratingAvg ratingCount isVerified country city").populate("category").populate("skills")
+    const similarJobs = []
+    
+    for (let i = 0; i < sameCategoryJobs.length; i++) {
+        if (sameCategoryJobs[i]._id.toString() !== singleJob._id.toString() && similarJobs.length < 4) {
+            similarJobs.push(sameCategoryJobs[i])
+        }
+    }
+    
+    res.status(200).json({
+    job: singleJob,
+    clientJobsPosted: clientJobsPosted,
+    similarJobs: similarJobs
+})
 
     } catch (error) {
         res.status(500).json({message: error.message})
