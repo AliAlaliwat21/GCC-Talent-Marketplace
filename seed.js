@@ -10,6 +10,7 @@ const ClientProfile = require('./models/clientProfile')
 const FreelancerProfile = require('./models/freelancerProfile')
 const Job = require("./models/job")
 const Proposal = require("./models/proposal")
+const Contract = require("./models/contract")
 
 const seedDatabase = async () => {
     try {
@@ -683,6 +684,68 @@ const seedDatabase = async () => {
         await jobs[9].save()
         
         console.log(`${proposals.length} proposals created`)
+        
+        const activeContract = await Contract.create({
+            client: clients[8]._id,
+            freelancer: freelancers[2]._id,
+            source: {
+                type: "job",
+                job: jobs[8]._id,
+                proposal: acceptedProposal._id
+            },
+            title: "Gaming articles website contract",
+            totalAmount: 1100,
+            currency: "USD",
+            status: "active",
+            milestones: [
+                {
+                    title: "Create the website structure",
+                    description: "Build the main website pages and navigation.",
+                    amount: 400,
+                    status: "approved",
+                    approvedAt: new Date()
+                },
+                {
+                    title: "Create the article pages",
+                    description: "Build and style the gaming article pages.",
+                    amount: 700,
+                    status: "in_progress",
+                    escrowAmount: 700,
+                    fundedAt: new Date()
+                }
+            ]
+        })
+
+        const completedContract = await Contract.create({
+            client: clients[9]._id,
+            freelancer: freelancers[18]._id,
+            source: {
+                type: "job",
+                job: jobs[9]._id,
+                proposal: completedProposal._id
+            },
+            title: "Arabic website translation contract",
+            totalAmount: 500,
+            currency: "USD",
+            status: "completed",
+            milestones: [
+                {
+                    title: "Translate website content",
+                    description: "Translate all website pages into Arabic.",
+                    amount: 500,
+                    status: "approved",
+                    approvedAt: new Date()
+                }
+            ],
+            completedAt: new Date()
+        })
+
+        const contracts = [
+            activeContract,
+            completedContract
+        ]
+
+        console.log(`${contracts.length} contracts created`)
 
     } catch (error) {
         console.log(error.message)
