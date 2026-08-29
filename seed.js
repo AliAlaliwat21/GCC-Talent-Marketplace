@@ -8,6 +8,7 @@ const Skill = require('./models/skill')
 const User = require('./models/user')
 const ClientProfile = require('./models/clientProfile')
 const FreelancerProfile = require('./models/freelancerProfile')
+const Job = require("./models/job")
 
 const seedDatabase = async () => {
     try {
@@ -445,6 +446,185 @@ const seedDatabase = async () => {
 
         console.log(`${freelancers.length} freelancers created`)
         console.log(`${clients.length} clients created`)
+        
+        
+        const jobDeadline = new Date()
+        jobDeadline.setDate(jobDeadline.getDate() + 30)
+
+        const jobs = await Job.insertMany([
+            {
+                client: clients[0]._id,
+                title: "Build a gaming community website",
+                description: "Create a responsive website where players can view events and join gaming tournaments.",
+                category: webDevelopment._id,
+                skills: [
+                    skills[0]._id,
+                    skills[1]._id,
+                    skills[2]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 700,
+                budgetMax: 1000,
+                experienceLevel: "intermediate",
+                duration: "One month",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[1]._id,
+                title: "Create a website for an arcade",
+                description: "Build a simple website showing arcade games, opening hours and event information.",
+                category: webDevelopment._id,
+                skills: [
+                    skills[0]._id,
+                    skills[1]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 500,
+                budgetMax: 800,
+                experienceLevel: "entry",
+                duration: "Three weeks",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[2]._id,
+                title: "Develop a fantasy game landing page",
+                description: "Create a landing page introducing a new fantasy game with characters and screenshots.",
+                category: webDevelopment._id,
+                skills: [
+                    skills[0]._id,
+                    skills[1]._id,
+                    skills[2]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 800,
+                budgetMax: 1200,
+                experienceLevel: "intermediate",
+                duration: "One month",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[3]._id,
+                title: "Design a logo for an adventure game",
+                description: "Create a simple fantasy-style logo for a new adventure game.",
+                category: graphicDesign._id,
+                skills: [
+                    skills[3]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 150,
+                budgetMax: 300,
+                experienceLevel: "entry",
+                duration: "One week",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[4]._id,
+                title: "Write short stories for a manga website",
+                description: "Write original short fantasy stories that can be published on a manga community website.",
+                category: writingTranslation._id,
+                skills: [
+                    skills[5]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 300,
+                budgetMax: 500,
+                experienceLevel: "intermediate",
+                duration: "Two weeks",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[5]._id,
+                title: "Design posters for a gaming tournament",
+                description: "Create promotional posters for an upcoming local gaming tournament.",
+                category: graphicDesign._id,
+                skills: [
+                    skills[4]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 200,
+                budgetMax: 400,
+                experienceLevel: "intermediate",
+                duration: "Two weeks",
+                deadline: jobDeadline,
+                status: "open"
+            },
+            {
+                client: clients[6]._id,
+                title: "Build a tournament registration page",
+                description: "Create a registration page for players joining local gaming competitions.",
+                category: webDevelopment._id,
+                skills: [
+                    skills[0]._id,
+                    skills[1]._id,
+                    skills[2]._id
+                ],
+                budgetType: "hourly",
+                budgetMin: 15,
+                budgetMax: 25,
+                experienceLevel: "intermediate",
+                duration: "Three weeks",
+                deadline: jobDeadline,
+                status: "draft"
+            },
+            {
+                client: clients[7]._id,
+                title: "Create artwork for an anime event",
+                description: "Design promotional artwork for a local anime and gaming event.",
+                category: graphicDesign._id,
+                skills: [
+                    skills[3]._id,
+                    skills[4]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 250,
+                budgetMax: 450,
+                experienceLevel: "intermediate",
+                duration: "Two weeks",
+                deadline: jobDeadline,
+                status: "closed"
+            },
+            {
+                client: clients[8]._id,
+                title: "Develop a website for gaming articles",
+                description: "Build a responsive website where gaming news and articles can be published.",
+                category: webDevelopment._id,
+                skills: [
+                    skills[0]._id,
+                    skills[1]._id,
+                    skills[2]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 900,
+                budgetMax: 1300,
+                experienceLevel: "expert",
+                duration: "Six weeks",
+                deadline: jobDeadline,
+                status: "in_progress"
+            },
+            {
+                client: clients[9]._id,
+                title: "Translate gaming website content into Arabic",
+                description: "Translate website pages and gaming content from English into Arabic.",
+                category: writingTranslation._id,
+                skills: [
+                    skills[6]._id
+                ],
+                budgetType: "fixed",
+                budgetMin: 350,
+                budgetMax: 600,
+                experienceLevel: "intermediate",
+                duration: "Three weeks",
+                deadline: jobDeadline,
+                status: "completed"
+            }
+        ])
+
+        console.log(`${jobs.length} jobs created`)
 
     } catch (error) {
         console.log(error.message)
