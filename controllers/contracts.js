@@ -35,7 +35,9 @@ const show = async (req, res) => {
         if (!contract) {
             return res.status(404).json({message: "Contract not found"})
         }
-        if (contract.client.toString() !== req.user._id.toString() && contract.freelancer.toString() !== req.user._id.toString()) {
+        if (req.user.role !== 'admin' && 
+            contract.client.toString() !== req.user._id.toString() && 
+            contract.freelancer.toString() !== req.user._id.toString()) {
             return res.status(403).json({message: "You cannot view this contract"})
         }
         res.status(200).json(contract)
