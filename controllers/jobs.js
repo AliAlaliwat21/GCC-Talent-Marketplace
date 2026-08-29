@@ -274,24 +274,68 @@ const deleteDraft = async (req, res)=>{
     }
 }
 
-const myJobs = async (req, res)=>{
+const myJobs = async (req, res) => {
     try {
-        if (req.user.role !== 'client'){
-            return res.status(403).json({
-                message: 'Only clients can view their own jobs!'
-            })
+        if (req.user.role !== "client") {
+            return res.status(403).json({message: "Only clients can view their own jobs!"})
         }
-        
-        const filter = {client: req.user._id}
+
+        const filter = {
+            client: req.user._id
+        }
+
         if (req.query.status) {
             filter.status = req.query.status
         }
 
-        const jobs = await Job.find(filter).populate('category').populate('skills')
+        const allClientJobs = await Job.find({
+            client: req.user._id
+        })
 
-        res.status(200).json(jobs)
+        let draftCount = 0
+        let openCount = 0
+        let inProgressCount = 0
+        let completedCount = 0
+        let closedCount = 0
+
+        for (let i = 0; i < allClientJobs.length; i++) {
+            if (allClientJobs[i].status === "draft") {
+                draftCount = draftCount + 1
+            }
+
+            if (allClientJobs[i].status === "open") {
+                openCount = openCount + 1
+            }
+
+            if (allClientJobs[i].status === "in_progress") {
+                inProgressCount = inProgressCount + 1
+            }
+
+            if (allClientJobs[i].status === "completed") {
+                completedCount = completedCount + 1
+            }
+
+            if (allClientJobs[i].status === "closed") {
+                closedCount = closedCount + 1
+            }
+        }
+
+        const jobs = await Job.find(filter).populate("category").populate("skills")
+
+        res.status(200).json({
+            jobs: jobs,
+            counts: {
+                drafts: draftCount,
+                open: openCount,
+                inProgress: inProgressCount,
+                completed: completedCount,
+                closed: closedCount
+            }
+        })
     } catch (error) {
-        res.status(500).json({message: error.message})
+        res.status(500).json({
+            message: error.message
+        })
     }
 }
 
