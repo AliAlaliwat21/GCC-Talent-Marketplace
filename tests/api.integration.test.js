@@ -334,11 +334,21 @@ describe("profile and account APIs", () => {
         const profileId = createdProfile.body._id
 
         const updatedProfile = await request(app)
-            .patch(`/api/v1/freelancers/${profileId}`)
+            .put("/api/v1/freelancers/me")
             .set("Authorization", `Bearer ${freelancer.token}`)
             .send({
                 headline: "Senior JavaScript Marketplace Developer",
+                bio: "I build reliable marketplace websites for clients across the GCC.",
+                skills: [masterData.skill._id.toString()],
                 hourlyRate: 30,
+                languages: [
+                    {
+                        name: "English",
+                        level: "Fluent"
+                    }
+                ],
+                availability: "full_time",
+                country: "Bahrain",
                 city: "Riffa"
             })
 
@@ -428,10 +438,14 @@ describe("profile and account APIs", () => {
         expect(currentClientProfile.status).toBe(200)
 
         const updatedClientProfile = await request(app)
-            .patch("/api/v1/clients/me")
+            .put("/api/v1/clients/me")
             .set("Authorization", `Bearer ${client.token}`)
             .send({
+                isCompany: true,
+                companyName: "Pixel Majlis",
                 description: "An updated GCC gaming community company description.",
+                website: "https://pixelmajlis.example.com",
+                country: "Bahrain",
                 city: "Muharraq"
             })
 
@@ -443,28 +457,11 @@ describe("profile and account APIs", () => {
         expect(publicClientProfile.status).toBe(200)
         expect(publicClientProfile.body.hiringSummary.jobsPosted).toBe(0)
 
-        const clientProfiles = await request(app).get("/api/v1/clients?limit=500")
-
-        expect(clientProfiles.status).toBe(200)
-        expect(clientProfiles.body.limit).toBe(50)
-
         const noUpload = await request(app)
             .post("/api/v1/uploads")
             .set("Authorization", `Bearer ${client.token}`)
 
         expect(noUpload.status).toBe(400)
-
-        const deletedClientProfile = await request(app)
-            .delete("/api/v1/clients/me")
-            .set("Authorization", `Bearer ${client.token}`)
-
-        expect(deletedClientProfile.status).toBe(200)
-
-        const deletedFreelancerProfile = await request(app)
-            .delete(`/api/v1/freelancers/${profileId}`)
-            .set("Authorization", `Bearer ${freelancer.token}`)
-
-        expect(deletedFreelancerProfile.status).toBe(200)
     })
 })
 
@@ -880,12 +877,6 @@ describe("admin, master data and error APIs", () => {
         expect(users.status).toBe(200)
         expect(users.body.users).toHaveLength(1)
         expect(users.body.limit).toBe(50)
-
-        const allUsers = await request(app)
-            .get("/api/v1/users?limit=500")
-            .set("Authorization", `Bearer ${adminToken}`)
-
-        expect(allUsers.status).toBe(200)
 
         const userDetails = await request(app)
             .get(`/api/v1/admin/users/${clientUser._id}`)

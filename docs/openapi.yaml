@@ -119,16 +119,6 @@ paths:
       responses:
         "200":
           description: Freelancer results
-    post:
-      tags: [Profiles]
-      summary: Create the current freelancer profile
-      security:
-        - bearerAuth: []
-      requestBody:
-        $ref: "#/components/requestBodies/JsonBody"
-      responses:
-        "201":
-          description: Profile created
   /freelancers/me:
     put:
       tags: [Profiles]
@@ -143,7 +133,7 @@ paths:
   /freelancers/{userId}:
     get:
       tags: [Profiles]
-      summary: View a public freelancer profile, reviews and gigs
+      summary: View a public freelancer profile and reviews
       parameters:
         - $ref: "#/components/parameters/UserId"
         - $ref: "#/components/parameters/Page"
@@ -208,16 +198,6 @@ paths:
       responses:
         "200":
           description: Client profile
-    post:
-      tags: [Profiles]
-      summary: Create the current client profile
-      security:
-        - bearerAuth: []
-      requestBody:
-        $ref: "#/components/requestBodies/JsonBody"
-      responses:
-        "201":
-          description: Profile created
     put:
       tags: [Profiles]
       summary: Create or replace the current client profile
@@ -228,16 +208,6 @@ paths:
       responses:
         "200":
           description: Profile saved
-    patch:
-      tags: [Profiles]
-      summary: Update the current client profile
-      security:
-        - bearerAuth: []
-      requestBody:
-        $ref: "#/components/requestBodies/JsonBody"
-      responses:
-        "200":
-          description: Profile updated
   /clients/{userId}:
     get:
       tags: [Profiles]

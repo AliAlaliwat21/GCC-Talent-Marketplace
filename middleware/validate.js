@@ -54,16 +54,6 @@ const schemas = {
         country: z.string().optional(),
         city: z.string().trim().max(100).optional()
     }),
-    updateFreelancerProfile: z.object({
-        headline: z.string().trim().min(2).max(120).optional(),
-        bio: z.string().trim().min(10).max(2000).optional(),
-        skills: z.array(z.string()).min(1).optional(),
-        hourlyRate: z.number().nonnegative().optional(),
-        languages: z.array(languageSchema).min(1).optional(),
-        availability: z.enum(["full_time", "part_time", "unavailable"]).optional(),
-        country: z.string().optional(),
-        city: z.string().trim().max(100).optional()
-    }),
     portfolio: z.object({
         title: z.string().trim().min(1).max(120),
         description: z.string().trim().max(1000).optional(),
@@ -80,14 +70,6 @@ const schemas = {
         isCompany: z.boolean(),
         companyName: z.string().trim().max(120).optional(),
         description: z.string().trim().min(10).max(2000),
-        website: z.string().url().optional(),
-        country: z.string().optional(),
-        city: z.string().trim().max(100).optional()
-    }),
-    updateClientProfile: z.object({
-        isCompany: z.boolean().optional(),
-        companyName: z.string().trim().max(120).optional(),
-        description: z.string().trim().min(10).max(2000).optional(),
         website: z.string().url().optional(),
         country: z.string().optional(),
         city: z.string().trim().max(100).optional()
