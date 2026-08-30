@@ -1,7 +1,5 @@
 require('dotenv').config()
 
-const dns = require("node:dns")
-dns.setServers(["8.8.8.8", "1.1.1.1"])
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
@@ -15,7 +13,6 @@ const Proposal = require("./models/proposal")
 const Contract = require("./models/contract")
 const Review = require("./models/review")
 const Transaction = require("./models/transaction")
-const Gig = require("./models/gig")
 
 
 const seedDatabase = async () => {
@@ -26,7 +23,6 @@ const seedDatabase = async () => {
 
         await Review.deleteMany()
         await Transaction.deleteMany()
-        await Gig.deleteMany()
         await Contract.deleteMany()
         await Proposal.deleteMany()
         await Job.deleteMany()
@@ -666,54 +662,6 @@ const seedDatabase = async () => {
         console.log(`${freelancers.length} freelancers created`)
         console.log(`${clients.length} clients created`)
 
-        const gigTitles = [
-            "Gaming community website setup",
-            "Responsive tournament landing page",
-            "Fantasy game logo design",
-            "Gaming event poster design",
-            "Arabic gaming content translation",
-            "Short fantasy story writing",
-            "Arcade website redesign",
-            "Streamer brand logo",
-            "Esports event poster",
-            "Game article writing",
-            "Manga website translation",
-            "Gaming shop landing page",
-            "Community banner design",
-            "Tournament registration page",
-            "Fantasy character poster"
-        ]
-
-        const gigs = []
-
-        for (let i = 0; i < gigTitles.length; i++) {
-            let gigCategory = webDevelopment
-
-            if (i % 3 === 1) {
-                gigCategory = graphicDesign
-            }
-
-            if (i % 3 === 2) {
-                gigCategory = writingTranslation
-            }
-
-            const gig = await Gig.create({
-                freelancer: freelancers[i]._id,
-                title: gigTitles[i],
-                description: `I will complete ${gigTitles[i].toLowerCase()} with clear communication and on-time delivery.`,
-                category: gigCategory._id,
-                tags: ["gaming", "gcc", "creative"],
-                price: 50 + (i * 10),
-                deliveryDays: 3 + (i % 7),
-                status: "active"
-            })
-
-            gigs.push(gig)
-        }
-
-        console.log(`${gigs.length} gigs created`)
-        
-        
         const jobDeadline = new Date()
         jobDeadline.setDate(jobDeadline.getDate() + 30)
 

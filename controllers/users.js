@@ -1,32 +1,5 @@
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
-const getPagination = require("../utils/pagination")
-
-const index = async (req, res) => {
-    try {
-        if (req.user.role !== "admin") {
-            return res.status(403).json({message: "Only admins can view users"})
-        }
-
-        const pagination = getPagination(req.query)
-        const users = await User.find()
-            .sort({createdAt: -1})
-            .skip(pagination.skip)
-            .limit(pagination.limit)
-
-        const total = await User.countDocuments()
-
-        res.status(200).json({
-            users: users,
-            page: pagination.page,
-            limit: pagination.limit,
-            total: total,
-            totalPages: Math.ceil(total / pagination.limit)
-        })
-    } catch (error) {
-        res.status(500).json({message: error.message})
-    }
-}
 
 const showMe = async (req, res)=>{
     try {
@@ -117,7 +90,6 @@ const changePassword = async(req,res)=>{
 }
 
 module.exports = {
-    index,
     showMe,
     updateMe,
     changePassword

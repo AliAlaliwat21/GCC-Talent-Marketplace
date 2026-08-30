@@ -53,7 +53,6 @@ router.post("/auth/login", authLimiter, validate("login"), authCtrl.signIn)
 router.post("/auth/refresh", authLimiter, authCtrl.refresh)
 router.post("/auth/logout", authCtrl.logout)
 
-router.get("/users", verifyToken, authorize("admin"), usersCtrl.index)
 router.get("/users/me", verifyToken, usersCtrl.showMe)
 router.patch("/users/me", verifyToken, validate("updateUser"), usersCtrl.updateMe)
 router.patch(
@@ -65,32 +64,12 @@ router.patch(
 
 router.get("/freelancers", freelancerProfilesCtrl.index)
 router.get("/freelancers/:userId", freelancerProfilesCtrl.show)
-router.post(
-    "/freelancers",
-    verifyToken,
-    authorize("freelancer"),
-    validate("freelancerProfile"),
-    freelancerProfilesCtrl.create
-)
 router.put(
     "/freelancers/me",
     verifyToken,
     authorize("freelancer"),
     validate("freelancerProfile"),
     freelancerProfilesCtrl.upsertMe
-)
-router.patch(
-    "/freelancers/:id",
-    verifyToken,
-    authorize("freelancer"),
-    validate("updateFreelancerProfile"),
-    freelancerProfilesCtrl.update
-)
-router.delete(
-    "/freelancers/:id",
-    verifyToken,
-    authorize("freelancer"),
-    freelancerProfilesCtrl.deleteProfile
 )
 router.post(
     "/freelancers/:id/portfolio",
@@ -113,34 +92,13 @@ router.delete(
     freelancerProfilesCtrl.deletePortfolioItem
 )
 
-router.get("/clients", clientProfileCtrl.index)
 router.get("/clients/me", verifyToken, clientProfileCtrl.showMe)
-router.post(
-    "/clients/me",
-    verifyToken,
-    authorize("client"),
-    validate("clientProfile"),
-    clientProfileCtrl.create
-)
 router.put(
     "/clients/me",
     verifyToken,
     authorize("client"),
     validate("clientProfile"),
     clientProfileCtrl.upsertMe
-)
-router.patch(
-    "/clients/me",
-    verifyToken,
-    authorize("client"),
-    validate("updateClientProfile"),
-    clientProfileCtrl.update
-)
-router.delete(
-    "/clients/me",
-    verifyToken,
-    authorize("client"),
-    clientProfileCtrl.deleteProfile
 )
 router.get("/clients/:userId", clientProfileCtrl.show)
 
@@ -156,9 +114,7 @@ router.patch(
     jobsCtrl.updateJob
 )
 router.patch("/jobs/:jobId/publish", verifyToken, authorize("client"), jobsCtrl.publishJob)
-router.patch("/jobs/:jobId/close", verifyToken, authorize("client"), jobsCtrl.closeJob)
 router.post("/jobs/:jobId/close", verifyToken, authorize("client"), jobsCtrl.closeJob)
-router.patch("/jobs/:jobId/reopen", verifyToken, authorize("client"), jobsCtrl.reopenJob)
 router.post("/jobs/:jobId/reopen", verifyToken, authorize("client"), jobsCtrl.reopenJob)
 router.delete("/jobs/:jobId", verifyToken, authorize("client"), jobsCtrl.deleteDraft)
 
@@ -176,12 +132,6 @@ router.get(
     proposalsCtrl.jobProposals
 )
 router.get(
-    "/proposals/me",
-    verifyToken,
-    authorize("freelancer"),
-    proposalsCtrl.freelancerProposals
-)
-router.get(
     "/proposals/mine",
     verifyToken,
     authorize("freelancer"),
@@ -194,23 +144,11 @@ router.patch(
     validate("updateProposal"),
     proposalsCtrl.update
 )
-router.patch(
-    "/proposals/:id/withdraw",
-    verifyToken,
-    authorize("freelancer"),
-    proposalsCtrl.withdraw
-)
 router.post(
     "/proposals/:id/withdraw",
     verifyToken,
     authorize("freelancer"),
     proposalsCtrl.withdraw
-)
-router.patch(
-    "/proposals/:id/shortlist",
-    verifyToken,
-    authorize("client"),
-    proposalsCtrl.shortlist
 )
 router.post(
     "/proposals/:id/shortlist",
@@ -218,24 +156,11 @@ router.post(
     authorize("client"),
     proposalsCtrl.shortlist
 )
-router.patch(
-    "/proposals/:id/decline",
-    verifyToken,
-    authorize("client"),
-    proposalsCtrl.decline
-)
 router.post(
     "/proposals/:id/decline",
     verifyToken,
     authorize("client"),
     proposalsCtrl.decline
-)
-router.patch(
-    "/proposals/:id/accept",
-    verifyToken,
-    authorize("client"),
-    validate("acceptProposal"),
-    proposalsCtrl.accept
 )
 router.post(
     "/proposals/:id/accept",
@@ -261,24 +186,11 @@ router.patch(
     validate("updateMilestone"),
     contractsCtrl.updateMilestone
 )
-router.patch(
-    "/contracts/:id/milestones/:mid/fund",
-    verifyToken,
-    authorize("client"),
-    contractsCtrl.fundMilestone
-)
 router.post(
     "/contracts/:id/milestones/:mid/fund",
     verifyToken,
     authorize("client"),
     contractsCtrl.fundMilestone
-)
-router.patch(
-    "/contracts/:id/milestones/:mid/deliver",
-    verifyToken,
-    authorize("freelancer"),
-    validate("delivery"),
-    contractsCtrl.deliverMilestone
 )
 router.post(
     "/contracts/:id/milestones/:mid/deliver",
@@ -287,24 +199,11 @@ router.post(
     validate("delivery"),
     contractsCtrl.deliverMilestone
 )
-router.patch(
-    "/contracts/:id/milestones/:mid/approve",
-    verifyToken,
-    authorize("client"),
-    contractsCtrl.approveMilestone
-)
 router.post(
     "/contracts/:id/milestones/:mid/approve",
     verifyToken,
     authorize("client"),
     contractsCtrl.approveMilestone
-)
-router.patch(
-    "/contracts/:id/milestones/:mid/revision",
-    verifyToken,
-    authorize("client"),
-    validate("revision"),
-    contractsCtrl.requestRevision
 )
 router.post(
     "/contracts/:id/milestones/:mid/request-revision",
@@ -312,12 +211,6 @@ router.post(
     authorize("client"),
     validate("revision"),
     contractsCtrl.requestRevision
-)
-router.patch(
-    "/contracts/:id/cancel",
-    verifyToken,
-    authorize("client", "freelancer"),
-    contractsCtrl.cancelContract
 )
 router.post(
     "/contracts/:id/cancel",
@@ -343,32 +236,8 @@ router.post(
 )
 
 router.get("/skills", skillsCtrl.index)
-router.post("/skills", verifyToken, authorize("admin"), validate("skill"), skillsCtrl.create)
-router.patch(
-    "/skills/:id",
-    verifyToken,
-    authorize("admin"),
-    validate("updateSkill"),
-    skillsCtrl.update
-)
-router.delete("/skills/:id", verifyToken, authorize("admin"), skillsCtrl.deleteSkill)
 
 router.get("/categories", categoriesCtrl.index)
-router.post(
-    "/categories",
-    verifyToken,
-    authorize("admin"),
-    validate("category"),
-    categoriesCtrl.create
-)
-router.patch(
-    "/categories/:id",
-    verifyToken,
-    authorize("admin"),
-    validate("updateCategory"),
-    categoriesCtrl.update
-)
-router.delete("/categories/:id", verifyToken, authorize("admin"), categoriesCtrl.deleteCategory)
 
 router.get("/wallet", verifyToken, walletCtrl.index)
 router.post(

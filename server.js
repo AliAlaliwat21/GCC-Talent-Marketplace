@@ -4,7 +4,6 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const morgan = require("morgan")
-const dns = require("node:dns")
 const cookieParser = require("cookie-parser")
 const helmet = require("helmet")
 
@@ -14,8 +13,6 @@ const {notFound, errorHandler} = require("./middleware/error-handler")
 
 const app = express()
 const PORT = process.env.PORT || "3000"
-
-dns.setServers(["8.8.8.8", "1.1.1.1"])
 
 const allowedOrigins = (
     process.env.CLIENT_URLS ||
