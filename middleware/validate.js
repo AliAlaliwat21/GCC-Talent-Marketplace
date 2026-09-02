@@ -101,7 +101,8 @@ const schemas = {
         experienceLevel: z.enum(["entry", "intermediate", "expert"]).optional(),
         duration: z.string().trim().max(100).optional(),
         deadline: z.coerce.date().optional(),
-        attachments: z.array(attachmentSchema).optional()
+        attachments: z.array(attachmentSchema).optional(),
+        status: z.enum(["draft", "open"]).optional()
     }),
     proposal: z.object({
         coverLetter: z.string().trim().min(10).max(3000),
